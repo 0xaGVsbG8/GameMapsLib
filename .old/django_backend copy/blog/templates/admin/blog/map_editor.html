@@ -1,0 +1,73 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}{{ game_map.name }} editor{% endblock %}
+{% block extrahead %}
+{{ block.super }}
+{{ map_data|json_script:"map-data" }}
+{{ editor_urls|json_script:"editor-urls" }}
+<link rel="stylesheet" href="{% static 'blog/map_editor.css' %}">
+{% endblock %}
+{% block bodyclass %}{{ block.super }} map-editor{% endblock %}
+{% block nav-sidebar %}{% endblock %}
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+  <a href="{% url 'admin:index' %}">Dashboard</a>
+  &rsaquo; {{ game_map.game.name }}
+  &rsaquo; {{ game_map.name }} editor
+</div>
+{% endblock %}
+
+{% block content %}
+<div id="map-editor" data-csrf="{{ csrf_token }}" data-map-id="{{ game_map.id }}">
+  <header class="editor-header">
+    <div>
+      <p class="editor-kicker">{{ game_map.game.name }}</p>
+      <h1>{{ game_map.name }}</h1>
+    </div>
+    <div class="editor-header-actions">
+      <label class="button upload-btn">
+        Upload map image
+        <input id="image-input" type="file" accept=".svg,.png,.jpg,.jpeg,.webp,.gif,image/*" hidden>
+      </label>
+      <a class="button" href="{% url 'admin:blog_gamemap_change' game_map.pk %}">Map details</a>
+    </div>
+  </header>
+  <p id="editor-status" class="editor-status" hidden></p>
+  <div class="editor-layout">
+    <aside class="editor-sidebar">
+      <form id="category-form" class="editor-form">
+        <label for="category-name">New category</label>
+        <div class="row">
+          <input id="category-name" name="name" type="text" placeholder="Locations" required>
+          <button type="submit" class="button">Add</button>
+        </div>
+      </form>
+      <div id="category-list"></div>
+    </aside>
+    <section class="editor-canvas-wrap">
+      <div id="map-viewport" class="editor-viewport">
+        <div id="map-stage">
+          <img id="map-image" alt="{{ game_map.name }}" draggable="false">
+          <div id="marker-layer"></div>
+        </div>
+      </div>
+      <p class="editor-hint">Select an item, then click the map to place a marker. Drag a pin to move it. Press Delete to remove the selected pin.</p>
+    </section>
+    <aside class="editor-inspector" id="inspector">
+      <h2>Selected marker</h2>
+      <p id="inspector-empty">Click a pin to edit its name or remove it.</p>
+      <form id="marker-form" hidden>
+        <label for="marker-name">Name</label>
+        <input id="marker-name" type="text" required>
+        <p id="marker-coords" class="muted"></p>
+        <div class="row">
+          <button type="submit" class="button">Save name</button>
+          <button type="button" id="delete-marker" class="button deletelink">Remove</button>
+        </div>
+      </form>
+    </aside>
+  </div>
+</div>
+<script src="{% static 'blog/map_editor.js' %}"></script>
+{% endblock %}

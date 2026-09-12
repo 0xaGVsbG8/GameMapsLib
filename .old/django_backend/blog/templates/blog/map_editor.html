@@ -1,0 +1,92 @@
+{% extends "blog/base.html" %}
+{% load static %}
+
+{% block title %}{{ game_map.name }} editor · Maps Admin{% endblock %}
+
+{% block content %}
+<p class="kicker">
+    <a href="{% url 'home' %}?game={{ game_map.game.name }}">Dashboard</a>
+    · {{ game_map.game.name }}
+</p>
+<div class="editor-header">
+    <h1>{{ game_map.name }} editor</h1>
+    <a href="{% url 'map_detail' game_map.pk %}">Map details</a>
+</div>
+
+<div class="editor-layout">
+    <aside class="editor-side">
+        <form method="post" class="panel-form">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="add_category">
+            <input type="hidden" name="map" value="{{ game_map.pk }}">
+            <label for="category-name">New category</label>
+            <input id="category-name" type="text" name="name" required placeholder="Locations">
+            <button class="button" type="submit">Add</button>
+            {% if category_form.errors %}
+                <p class="error">{{ category_form.errors }}</p>
+            {% endif %}
+        </form>
+
+        <form method="post" class="panel-form">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="add_item">
+            <p>{{ item_form.category.label_tag }} {{ item_form.category }}</p>
+            <p>{{ item_form.name.label_tag }} {{ item_form.name }}</p>
+            <button class="button" type="submit">Add item</button>
+            {% if item_form.errors %}
+                <p class="error">{{ item_form.errors }}</p>
+            {% endif %}
+        </form>
+
+        {% for category in game_map.categories.all %}
+            <section class="panel">
+                <h2>{{ category.name }}</h2>
+                <ul>
+                    {% for item in category.items.all %}
+                        <li>{{ item.name }} · {{ item.markers.count }} markers</li>
+                    {% empty %}
+                        <li class="muted">No items</li>
+                    {% endfor %}
+                </ul>
+            </section>
+        {% endfor %}
+    </aside>
+
+    <section class="editor-canvas-wrap">
+        <form method="post" enctype="multipart/form-data" class="upload-row">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="upload_image">
+            <input type="file" name="image" accept=".svg,.png,.jpg,.jpeg,.webp,.gif,image/*" required>
+            <button class="button" type="submit">Upload map image</button>
+        </form>
+
+        <div id="map-stage" class="map-stage">
+            {% if game_map.image_url %}
+                <img id="map-image" src="{{ game_map.image_url }}" alt="{{ game_map.name }}" draggable="false">
+                {% for marker in markers %}
+                    <span
+                        class="pin"
+                        style="left: {{ marker.x }}%; top: {{ marker.y }}%;"
+                        title="{{ marker.name }}"
+                    ></span>
+                {% endfor %}
+                <span id="preview-pin" class="pin preview" hidden></span>
+            {% else %}
+                <p class="empty">Upload a map image to place markers.</p>
+            {% endif %}
+        </div>
+        <p class="muted">Select an item, then click the map to set coordinates.</p>
+    </section>
+
+    <aside class="editor-side">
+        <h2>Place marker</h2>
+        <form method="post" class="panel-form" id="marker-form">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="add_marker">
+            {{ marker_form.as_p }}
+            <button class="button" type="submit">Save marker</button>
+        </form>
+    </aside>
+</div>
+<script src="{% static 'blog/map_editor.js' %}"></script>
+{% endblock %}

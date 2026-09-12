@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1100" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="er-sea" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0%" stop-color="#1a2418"/>
+      <stop offset="100%" stop-color="#0c120e"/>
+    </linearGradient>
+    <radialGradient id="er-gold" cx="48%" cy="42%" r="40%">
+      <stop offset="0%" stop-color="#c9a24a" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#c9a24a" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="er-soft" x="-6%" y="-6%" width="112%" height="112%">
+      <feDropShadow dx="0" dy="7" stdDeviation="9" flood-color="#040604" flood-opacity="0.55"/>
+    </filter>
+  </defs>
+  <rect width="1600" height="1100" fill="url(#er-sea)"/>
+  <rect width="1600" height="1100" fill="url(#er-gold)"/>
+  <path filter="url(#er-soft)" fill="#3a4a2e" d="M220 280 C360 140 620 110 820 180 C1020 250 1180 220 1320 300 C1460 390 1480 560 1380 700 C1260 860 980 920 740 880 C500 840 280 760 200 580 C140 440 140 360 220 280 Z"/>
+  <path fill="#4a5c36" d="M280 320 C400 200 640 180 820 230 C1020 290 1200 270 1300 350 C1400 430 1400 580 1300 690 C1160 820 920 860 700 820 C480 780 300 700 250 540 C220 440 230 370 280 320 Z"/>
+  <path fill="#6a7a42" d="M520 340 C640 280 820 290 940 360 C1040 420 1080 520 1000 600 C900 700 700 720 560 650 C440 590 430 420 520 340 Z"/>
+  <path fill="#8a7a48" d="M980 280 C1100 250 1240 290 1300 380 C1340 450 1280 530 1180 540 C1080 550 980 470 960 390 C950 330 960 295 980 280 Z"/>
+  <path fill="#2c3826" d="M300 620 C400 580 520 620 540 720 C560 800 460 860 360 830 C270 800 250 670 300 620 Z"/>
+  <path fill="#d4b45a" d="M760 360 C820 340 870 380 860 440 C850 490 800 520 760 500 C720 480 720 385 760 360 Z"/>
+  <circle cx="790" cy="420" r="22" fill="#f0d878"/>
+  <circle cx="790" cy="420" r="10" fill="#fff4c0"/>
+  <path fill="#5a4a32" d="M1080 640 C1160 610 1260 650 1280 730 C1295 790 1210 830 1130 810 C1060 790 1030 680 1080 640 Z"/>
+  <path fill="#2a3428" opacity="0.45" d="M200 200 C340 160 420 240 380 320 C300 300 220 260 200 200 Z"/>
+</svg>

@@ -1,0 +1,152 @@
+{% extends "admin/index.html" %}
+{% load static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+  .maps-dashboard { margin-bottom: 24px; }
+  .maps-stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .maps-stat {
+    background: var(--darkened-bg);
+    border: 1px solid var(--hairline-color);
+    border-radius: 8px;
+    padding: 14px 16px;
+  }
+  .maps-stat strong {
+    display: block;
+    font-size: 1.6rem;
+    line-height: 1.2;
+  }
+  .maps-stat span {
+    color: var(--body-quiet-color, #666);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .maps-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .maps-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 14px;
+    margin-bottom: 8px;
+  }
+  .map-card {
+    display: flex;
+    flex-direction: column;
+    background: var(--body-bg);
+    border: 1px solid var(--hairline-color);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .map-card-preview {
+    height: 140px;
+    background: #071018;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .map-card-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .map-card-preview .empty {
+    color: #9ca3af;
+    font-size: 0.85rem;
+  }
+  .map-card-body { padding: 12px 14px 14px; }
+  .map-card-body h3 {
+    margin: 0 0 4px;
+    font-size: 1.05rem;
+  }
+  .map-card-body p {
+    margin: 0 0 10px;
+    color: var(--body-quiet-color, #666);
+  }
+  .map-card-meta {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+    font-size: 0.82rem;
+    color: var(--body-quiet-color, #666);
+  }
+  .map-card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .map-card-actions a {
+    padding: 6px 10px;
+    border-radius: 6px;
+    text-decoration: none;
+  }
+  .map-card-actions .editor-btn {
+    background: var(--default-button-bg, var(--primary));
+    color: var(--button-fg, #fff);
+  }
+  @media (max-width: 900px) {
+    .maps-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="maps-dashboard">
+  <div class="maps-stats">
+    <div class="maps-stat"><strong>{{ dashboard_stats.games }}</strong><span>Games</span></div>
+    <div class="maps-stat"><strong>{{ dashboard_stats.maps }}</strong><span>Maps</span></div>
+    <div class="maps-stat"><strong>{{ dashboard_stats.categories }}</strong><span>Categories</span></div>
+    <div class="maps-stat"><strong>{{ dashboard_stats.markers }}</strong><span>Markers</span></div>
+  </div>
+
+  <div class="maps-toolbar">
+    <a class="button" href="{{ add_map_url }}">Add map</a>
+    <a class="button" href="{{ add_category_url }}">Add category</a>
+    <a class="button" href="{{ add_marker_url }}">Add marker</a>
+  </div>
+
+  <h2>Maps</h2>
+  <div class="maps-grid">
+    {% for game_map in dashboard_maps %}
+      <article class="map-card">
+        <div class="map-card-preview">
+          {% if game_map.image_url %}
+            <img src="{{ game_map.image_url }}" alt="{{ game_map.name }}">
+          {% else %}
+            <span class="empty">No image yet</span>
+          {% endif %}
+        </div>
+        <div class="map-card-body">
+          <h3>{{ game_map.name }}</h3>
+          <p>{{ game_map.game.name }}</p>
+          <div class="map-card-meta">
+            <span>{{ game_map.category_count }} categories</span>
+            <span>{{ game_map.item_count }} items</span>
+            <span>{{ game_map.marker_count }} markers</span>
+          </div>
+          <div class="map-card-actions">
+            <a class="editor-btn" href="{% url 'admin:blog_map_editor' game_map.pk %}">Open visual editor</a>
+            <a href="{% url 'admin:blog_gamemap_change' game_map.pk %}">Map details</a>
+          </div>
+        </div>
+      </article>
+    {% empty %}
+      <p>No maps yet. <a href="{{ add_map_url }}">Create the first map</a>.</p>
+    {% endfor %}
+  </div>
+</div>
+
+<div id="content-main" class="app-list">
+  {% include "admin/app_list.html" with app_list=app_list show_changelinks=True %}
+</div>
+{% endblock %}

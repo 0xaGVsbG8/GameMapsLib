@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1100" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <radialGradient id="sr-deep" cx="50%" cy="50%" r="70%">
+      <stop offset="0%" stop-color="#2a1810"/>
+      <stop offset="100%" stop-color="#0a0808"/>
+    </radialGradient>
+    <filter id="sr-soft" x="-6%" y="-6%" width="112%" height="112%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#000" flood-opacity="0.6"/>
+    </filter>
+  </defs>
+  <rect width="1600" height="1100" fill="url(#sr-deep)"/>
+  <path filter="url(#sr-soft)" fill="#3a2218" d="M340 240 C560 120 980 140 1180 280 C1380 430 1360 720 1140 860 C900 1010 540 980 360 800 C180 620 180 380 340 240 Z"/>
+  <path fill="#4a2c20" d="M400 300 C580 200 940 220 1100 340 C1260 460 1240 700 1060 810 C860 930 560 900 420 740 C300 600 300 400 400 300 Z"/>
+  <path fill="#6a3a24" d="M620 380 C760 320 940 360 1000 480 C1060 600 980 720 820 760 C660 800 540 680 560 540 C575 450 560 410 620 380 Z"/>
+  <path fill="#8a4a28" d="M740 460 C820 430 900 470 910 540 C920 610 850 660 780 650 C710 640 690 500 740 460 Z"/>
+  <circle cx="800" cy="540" r="26" fill="#c45c28"/>
+  <circle cx="800" cy="540" r="12" fill="#f0a050"/>
+  <path fill="#2a1410" d="M480 700 C560 660 640 720 620 800 C600 860 500 870 450 820 C410 780 430 730 480 700 Z"/>
+  <path fill="#5a3020" d="M1080 360 C1160 330 1240 380 1220 460 C1200 520 1110 530 1060 480 C1020 440 1030 385 1080 360 Z"/>
+</svg>

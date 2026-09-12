@@ -1,0 +1,39 @@
+{% extends "blog/base.html" %}
+
+{% block title %}{{ game_map.name }} · Maps Admin{% endblock %}
+
+{% block content %}
+<p class="kicker">
+    <a href="{% url 'home' %}?game={{ game_map.game.name }}">Dashboard</a>
+    · {{ game_map.game.name }}
+</p>
+<h1>{{ game_map.name }}</h1>
+
+<div class="detail-actions">
+    <a class="button editor-btn" href="{% url 'map_editor' game_map.pk %}">Open visual editor</a>
+</div>
+
+{% if game_map.image_url %}
+    <img class="detail-preview" src="{{ game_map.image_url }}" alt="{{ game_map.name }}">
+{% endif %}
+
+{% for category in game_map.categories.all %}
+    <section class="panel">
+        <h2>{{ category.name }}</h2>
+        {% for item in category.items.all %}
+            <h3>{{ item.name }}</h3>
+            <ul>
+                {% for marker in item.markers.all %}
+                    <li>{{ marker.name }} ({{ marker.x }}, {{ marker.y }})</li>
+                {% empty %}
+                    <li class="muted">No markers yet.</li>
+                {% endfor %}
+            </ul>
+        {% empty %}
+            <p class="muted">No items in this category.</p>
+        {% endfor %}
+    </section>
+{% empty %}
+    <p class="muted">No categories yet. Add one from the dashboard or visual editor.</p>
+{% endfor %}
+{% endblock %}

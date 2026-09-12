@@ -1,0 +1,27 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Maps Admin{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'blog/dashboard.css' %}">
+</head>
+<body>
+    <header class="topbar">
+        <a class="brand" href="{% url 'home' %}">Maps Admin</a>
+        <nav class="top-nav">
+            <a href="{% url 'home' %}">Dashboard</a>
+            <a href="{% url 'add_game' %}">Add game</a>
+            <a href="{% url 'add_map' %}{% if selected_game %}?game={{ selected_game.name }}{% endif %}">Add map</a>
+        </nav>
+    </header>
+
+    <div class="shell">
+        {% include "blog/components/left-sidebar.html" %}
+        <main class="main">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+</body>
+</html>

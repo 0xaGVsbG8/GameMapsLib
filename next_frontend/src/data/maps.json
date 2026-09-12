@@ -1,0 +1,1403 @@
+{
+  "title": "Interactive Map",
+  "games": [
+    {
+      "id": "palworld",
+      "name": "Palworld",
+      "maps": [
+        {
+          "id": "palpagos",
+          "name": "Palpagos",
+          "image": "/maps/palpagos.svg",
+          "categories": [
+            {
+              "id": "locations",
+              "name": "Locations",
+              "items": [
+                {
+                  "id": "fast-travel",
+                  "name": "Fast Travel",
+                  "icon": "travel",
+                  "enabledByDefault": true,
+                  "markers": [
+                    {
+                      "id": "ft-1",
+                      "name": "Northwatch Plateau",
+                      "x": 28.5,
+                      "y": 24
+                    },
+                    {
+                      "id": "ft-2",
+                      "name": "Verdant Heart",
+                      "x": 38,
+                      "y": 42
+                    },
+                    {
+                      "id": "ft-3",
+                      "name": "Westwind Cove",
+                      "x": 16,
+                      "y": 48
+                    },
+                    {
+                      "id": "ft-4",
+                      "name": "Sunken Dunes",
+                      "x": 34,
+                      "y": 72
+                    },
+                    {
+                      "id": "ft-5",
+                      "name": "Ember Caldera",
+                      "x": 74,
+                      "y": 32
+                    },
+                    {
+                      "id": "ft-6",
+                      "name": "Ashen Gate",
+                      "x": 80.5,
+                      "y": 40
+                    },
+                    {
+                      "id": "ft-7",
+                      "name": "Midsea Crossing",
+                      "x": 58,
+                      "y": 60
+                    },
+                    {
+                      "id": "ft-8",
+                      "name": "Southmarsh Camp",
+                      "x": 24,
+                      "y": 82
+                    },
+                    {
+                      "id": "ft-9",
+                      "name": "Far Isle Beacon",
+                      "x": 90,
+                      "y": 68
+                    },
+                    {
+                      "id": "ft-10",
+                      "name": "Snowline Rest",
+                      "x": 32,
+                      "y": 22.5
+                    },
+                    {
+                      "id": "ft-11",
+                      "name": "Riverbend Tower",
+                      "x": 44,
+                      "y": 55
+                    },
+                    {
+                      "id": "ft-12",
+                      "name": "Coral Lookout",
+                      "x": 10.5,
+                      "y": 54
+                    }
+                  ]
+                },
+                {
+                  "id": "towers",
+                  "name": "Syndicate Tower",
+                  "icon": "tower",
+                  "enabledByDefault": true,
+                  "markers": [
+                    {
+                      "id": "tw-1",
+                      "name": "Northern Syndicate Tower",
+                      "x": 36,
+                      "y": 30
+                    },
+                    {
+                      "id": "tw-2",
+                      "name": "Caldera Syndicate Tower",
+                      "x": 72,
+                      "y": 28
+                    },
+                    {
+                      "id": "tw-3",
+                      "name": "Dune Syndicate Tower",
+                      "x": 38,
+                      "y": 76
+                    },
+                    {
+                      "id": "tw-4",
+                      "name": "Marsh Syndicate Tower",
+                      "x": 26,
+                      "y": 86
+                    },
+                    {
+                      "id": "tw-5",
+                      "name": "Isle Syndicate Tower",
+                      "x": 88,
+                      "y": 72
+                    }
+                  ]
+                },
+                {
+                  "id": "alpha",
+                  "name": "Alpha Pals",
+                  "icon": "alpha",
+                  "enabledByDefault": true,
+                  "markers": [
+                    {
+                      "id": "al-1",
+                      "name": "Alpha Frostmane",
+                      "x": 30,
+                      "y": 26
+                    },
+                    {
+                      "id": "al-2",
+                      "name": "Alpha Leafstalker",
+                      "x": 42,
+                      "y": 40
+                    },
+                    {
+                      "id": "al-3",
+                      "name": "Alpha Emberjaw",
+                      "x": 76,
+                      "y": 36
+                    },
+                    {
+                      "id": "al-4",
+                      "name": "Alpha Dunehowl",
+                      "x": 40,
+                      "y": 74
+                    },
+                    {
+                      "id": "al-5",
+                      "name": "Alpha Tidecaller",
+                      "x": 20,
+                      "y": 50
+                    },
+                    {
+                      "id": "al-6",
+                      "name": "Alpha Thornback",
+                      "x": 56,
+                      "y": 62
+                    },
+                    {
+                      "id": "al-7",
+                      "name": "Alpha Marshlurk",
+                      "x": 28,
+                      "y": 80
+                    },
+                    {
+                      "id": "al-8",
+                      "name": "Alpha Cinderwing",
+                      "x": 82,
+                      "y": 30
+                    },
+                    {
+                      "id": "al-9",
+                      "name": "Alpha Stonehide",
+                      "x": 48,
+                      "y": 50
+                    }
+                  ]
+                },
+                {
+                  "id": "dungeon",
+                  "name": "Dungeon",
+                  "icon": "dungeon",
+                  "enabledByDefault": false,
+                  "markers": [
+                    {
+                      "id": "dg-1",
+                      "name": "Frozen Hollow",
+                      "x": 34.5,
+                      "y": 20
+                    },
+                    {
+                      "id": "dg-2",
+                      "name": "Rootcavern",
+                      "x": 40,
+                      "y": 48
+                    },
+                    {
+                      "id": "dg-3",
+                      "name": "Magma Vault",
+                      "x": 78,
+                      "y": 34
+                    },
+                    {
+                      "id": "dg-4",
+                      "name": "Sunken Catacomb",
+                      "x": 36,
+                      "y": 70
+                    },
+                    {
+                      "id": "dg-5",
+                      "name": "Midsea Grotto",
+                      "x": 60,
+                      "y": 64
+                    },
+                    {
+                      "id": "dg-6",
+                      "name": "Isle Depths",
+                      "x": 92,
+                      "y": 70
+                    },
+                    {
+                      "id": "dg-7",
+                      "name": "Westcliff Mine",
+                      "x": 14,
+                      "y": 52
+                    },
+                    {
+                      "id": "dg-8",
+                      "name": "Marsh Pit",
+                      "x": 22,
+                      "y": 84
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "collectibles",
+              "name": "Collectibles",
+              "items": [
+                {
+                  "id": "treasure",
+                  "name": "Treasure Chest",
+                  "icon": "chest",
+                  "enabledByDefault": false,
+                  "markers": [
+                    {
+                      "id": "tr-1",
+                      "name": "Hidden Chest",
+                      "x": 26,
+                      "y": 36
+                    },
+                    {
+                      "id": "tr-2",
+                      "name": "Hidden Chest",
+                      "x": 46,
+                      "y": 38
+                    },
+                    {
+                      "id": "tr-3",
+                      "name": "Hidden Chest",
+                      "x": 33,
+                      "y": 58
+                    },
+                    {
+                      "id": "tr-4",
+                      "name": "Hidden Chest",
+                      "x": 70,
+                      "y": 24
+                    },
+                    {
+                      "id": "tr-5",
+                      "name": "Hidden Chest",
+                      "x": 84,
+                      "y": 38
+                    },
+                    {
+                      "id": "tr-6",
+                      "name": "Hidden Chest",
+                      "x": 54,
+                      "y": 58
+                    },
+                    {
+                      "id": "tr-7",
+                      "name": "Hidden Chest",
+                      "x": 42,
+                      "y": 78
+                    },
+                    {
+                      "id": "tr-8",
+                      "name": "Hidden Chest",
+                      "x": 20,
+                      "y": 78
+                    },
+                    {
+                      "id": "tr-9",
+                      "name": "Hidden Chest",
+                      "x": 86,
+                      "y": 66
+                    },
+                    {
+                      "id": "tr-10",
+                      "name": "Hidden Chest",
+                      "x": 12,
+                      "y": 58
+                    }
+                  ]
+                },
+                {
+                  "id": "element",
+                  "name": "Element Chest",
+                  "icon": "element",
+                  "enabledByDefault": false,
+                  "markers": [
+                    {
+                      "id": "el-1",
+                      "name": "Ice Element Chest",
+                      "x": 29,
+                      "y": 21
+                    },
+                    {
+                      "id": "el-2",
+                      "name": "Fire Element Chest",
+                      "x": 75,
+                      "y": 26
+                    },
+                    {
+                      "id": "el-3",
+                      "name": "Earth Element Chest",
+                      "x": 50,
+                      "y": 52
+                    },
+                    {
+                      "id": "el-4",
+                      "name": "Water Element Chest",
+                      "x": 18,
+                      "y": 56
+                    },
+                    {
+                      "id": "el-5",
+                      "name": "Grass Element Chest",
+                      "x": 57,
+                      "y": 66
+                    },
+                    {
+                      "id": "el-6",
+                      "name": "Dark Element Chest",
+                      "x": 81,
+                      "y": 44
+                    }
+                  ]
+                },
+                {
+                  "id": "fruit",
+                  "name": "Skill Fruit",
+                  "icon": "fruit",
+                  "enabledByDefault": false,
+                  "markers": [
+                    {
+                      "id": "fr-1",
+                      "name": "Skill Fruit Tree",
+                      "x": 35,
+                      "y": 36
+                    },
+                    {
+                      "id": "fr-2",
+                      "name": "Skill Fruit Tree",
+                      "x": 47,
+                      "y": 46
+                    },
+                    {
+                      "id": "fr-3",
+                      "name": "Skill Fruit Tree",
+                      "x": 62,
+                      "y": 58
+                    },
+                    {
+                      "id": "fr-4",
+                      "name": "Skill Fruit Tree",
+                      "x": 24,
+                      "y": 62
+                    },
+                    {
+                      "id": "fr-5",
+                      "name": "Skill Fruit Tree",
+                      "x": 88,
+                      "y": 64
+                    }
+                  ]
+                },
+                {
+                  "id": "note",
+                  "name": "Note",
+                  "icon": "note",
+                  "enabledByDefault": false,
+                  "markers": [
+                    {
+                      "id": "nt-1",
+                      "name": "Explorer's Note",
+                      "x": 31,
+                      "y": 44
+                    },
+                    {
+                      "id": "nt-2",
+                      "name": "Explorer's Note",
+                      "x": 68,
+                      "y": 36
+                    },
+                    {
+                      "id": "nt-3",
+                      "name": "Explorer's Note",
+                      "x": 52,
+                      "y": 70
+                    },
+                    {
+                      "id": "nt-4",
+                      "name": "Explorer's Note",
+                      "x": 22,
+                      "y": 74
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "effigies",
+              "name": "Effigies",
+              "items": [
+                {
+                  "id": "lifmunk",
+                  "name": "Lifmunk Effigy",
+                  "icon": "statue",
+                  "enabledByDefault": false,
+                  "markers": [
+                    {
+                      "id": "ef-1",
+                      "name": "Lifmunk Effigy",
+                      "x": 27,
+                      "y": 40
+                    },
+                    {
+                      "id": "ef-2",
+                      "name": "Lifmunk Effigy",
+                      "x": 43,
+                      "y": 52
+                    },
+                    {
+                      "id": "ef-3",
+                      "name": "Lifmunk Effigy",
+                      "x": 59,
+                      "y": 56
+                    },
+                    {
+                      "id": "ef-4",
+                      "name": "Lifmunk Effigy",
+                      "x": 37,
+                      "y": 68
+                    },
+                    {
+                      "id": "ef-5",
+                      "name": "Lifmunk Effigy",
+                      "x": 73,
+                      "y": 38
+                    },
+                    {
+                      "id": "ef-6",
+                      "name": "Lifmunk Effigy",
+                      "x": 19,
+                      "y": 60
+                    }
+                  ]
+                },
+                {
+                  "id": "rooby",
+                  "name": "Rooby Effigy",
+                  "icon": "statue-alt",
+                  "enabledByDefault": false,
+                  "markers": [
+                    {
+                      "id": "rb-1",
+                      "name": "Rooby Effigy",
+                      "x": 41,
+                      "y": 34
+                    },
+                    {
+                      "id": "rb-2",
+                      "name": "Rooby Effigy",
+                      "x": 55,
+                      "y": 64
+                    },
+                    {
+                      "id": "rb-3",
+                      "name": "Rooby Effigy",
+                      "x": 77,
+                      "y": 42
+                    },
+                    {
+                      "id": "rb-4",
+                      "name": "Rooby Effigy",
+                      "x": 25,
+                      "y": 76
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "world-tree",
+          "name": "World Tree",
+          "image": "/maps/world-tree.svg",
+          "categories": [
+            {
+              "id": "locations",
+              "name": "Locations",
+              "items": [
+                {
+                  "id": "fast-travel",
+                  "name": "Fast Travel",
+                  "icon": "travel",
+                  "enabledByDefault": true,
+                  "markers": [
+                    {
+                      "id": "wt-ft-1",
+                      "name": "Rootgate",
+                      "x": 50,
+                      "y": 72
+                    },
+                    {
+                      "id": "wt-ft-2",
+                      "name": "Canopy Spire",
+                      "x": 50,
+                      "y": 38
+                    },
+                    {
+                      "id": "wt-ft-3",
+                      "name": "West Bough",
+                      "x": 32,
+                      "y": 50
+                    },
+                    {
+                      "id": "wt-ft-4",
+                      "name": "East Bough",
+                      "x": 68,
+                      "y": 50
+                    },
+                    {
+                      "id": "wt-ft-5",
+                      "name": "Heartwood",
+                      "x": 50,
+                      "y": 48
+                    },
+                    {
+                      "id": "wt-ft-6",
+                      "name": "North Crown",
+                      "x": 50,
+                      "y": 22
+                    }
+                  ]
+                },
+                {
+                  "id": "towers",
+                  "name": "Syndicate Tower",
+                  "icon": "tower",
+                  "enabledByDefault": true,
+                  "markers": [
+                    {
+                      "id": "wt-tw-1",
+                      "name": "Crown Tower",
+                      "x": 50,
+                      "y": 18
+                    },
+                    {
+                      "id": "wt-tw-2",
+                      "name": "Root Tower",
+                      "x": 50,
+                      "y": 82
+                    }
+                  ]
+                },
+                {
+                  "id": "alpha",
+                  "name": "Alpha Pals",
+                  "icon": "alpha",
+                  "enabledByDefault": true,
+                  "markers": [
+                    {
+                      "id": "wt-al-1",
+                      "name": "Alpha Grovekeeper",
+                      "x": 42,
+                      "y": 42
+                    },
+                    {
+                      "id": "wt-al-2",
+                      "name": "Alpha Sapfiend",
+                      "x": 58,
+                      "y": 44
+                    },
+                    {
+                      "id": "wt-al-3",
+                      "name": "Alpha Barkhide",
+                      "x": 36,
+                      "y": 58
+                    },
+                    {
+                      "id": "wt-al-4",
+                      "name": "Alpha Canopyre",
+                      "x": 64,
+                      "y": 60
+                    },
+                    {
+                      "id": "wt-al-5",
+                      "name": "Alpha Heartbloom",
+                      "x": 50,
+                      "y": 54
+                    }
+                  ]
+                },
+                {
+                  "id": "dungeon",
+                  "name": "Dungeon",
+                  "icon": "dungeon",
+                  "enabledByDefault": false,
+                  "markers": [
+                    {
+                      "id": "wt-dg-1",
+                      "name": "Hollow Heart",
+                      "x": 50,
+                      "y": 50
+                    },
+                    {
+                      "id": "wt-dg-2",
+                      "name": "Root Labyrinth",
+                      "x": 40,
+                      "y": 74
+                    },
+                    {
+                      "id": "wt-dg-3",
+                      "name": "Crown Vault",
+                      "x": 56,
+                      "y": 26
+                    },
+                    {
+                      "id": "wt-dg-4",
+                      "name": "Amber Pit",
+                      "x": 66,
+                      "y": 70
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "collectibles",
+              "name": "Collectibles",
+              "items": [
+                {
+                  "id": "treasure",
+                  "name": "Treasure Chest",
+                  "icon": "chest",
+                  "enabledByDefault": false,
+                  "markers": [
+                    {
+                      "id": "wt-tr-1",
+                      "name": "Hidden Chest",
+                      "x": 38,
+                      "y": 40
+                    },
+                    {
+                      "id": "wt-tr-2",
+                      "name": "Hidden Chest",
+                      "x": 62,
+                      "y": 40
+                    },
+                    {
+                      "id": "wt-tr-3",
+                      "name": "Hidden Chest",
+                      "x": 34,
+                      "y": 64
+                    },
+                    {
+                      "id": "wt-tr-4",
+                      "name": "Hidden Chest",
+                      "x": 66,
+                      "y": 64
+                    },
+                    {
+                      "id": "wt-tr-5",
+                      "name": "Hidden Chest",
+                      "x": 50,
+                      "y": 66
+                    },
+                    {
+                      "id": "wt-tr-6",
+                      "name": "Hidden Chest",
+                      "x": 46,
+                      "y": 30
+                    }
+                  ]
+                },
+                {
+                  "id": "element",
+                  "name": "Element Chest",
+                  "icon": "element",
+                  "enabledByDefault": false,
+                  "markers": [
+                    {
+                      "id": "wt-el-1",
+                      "name": "Grass Element Chest",
+                      "x": 44,
+                      "y": 46
+                    },
+                    {
+                      "id": "wt-el-2",
+                      "name": "Light Element Chest",
+                      "x": 50,
+                      "y": 47
+                    },
+                    {
+                      "id": "wt-el-3",
+                      "name": "Earth Element Chest",
+                      "x": 56,
+                      "y": 58
+                    }
+                  ]
+                },
+                {
+                  "id": "fruit",
+                  "name": "Skill Fruit",
+                  "icon": "fruit",
+                  "enabledByDefault": false,
+                  "markers": [
+                    {
+                      "id": "wt-fr-1",
+                      "name": "Skill Fruit Tree",
+                      "x": 40,
+                      "y": 52
+                    },
+                    {
+                      "id": "wt-fr-2",
+                      "name": "Skill Fruit Tree",
+                      "x": 60,
+                      "y": 52
+                    },
+                    {
+                      "id": "wt-fr-3",
+                      "name": "Skill Fruit Tree",
+                      "x": 48,
+                      "y": 62
+                    }
+                  ]
+                },
+                {
+                  "id": "note",
+                  "name": "Note",
+                  "icon": "note",
+                  "enabledByDefault": false,
+                  "markers": [
+                    {
+                      "id": "wt-nt-1",
+                      "name": "World Tree Codex",
+                      "x": 47,
+                      "y": 36
+                    },
+                    {
+                      "id": "wt-nt-2",
+                      "name": "World Tree Codex",
+                      "x": 54,
+                      "y": 72
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "effigies",
+              "name": "Effigies",
+              "items": [
+                {
+                  "id": "lifmunk",
+                  "name": "Lifmunk Effigy",
+                  "icon": "statue",
+                  "enabledByDefault": false,
+                  "markers": [
+                    {
+                      "id": "wt-ef-1",
+                      "name": "Lifmunk Effigy",
+                      "x": 36,
+                      "y": 46
+                    },
+                    {
+                      "id": "wt-ef-2",
+                      "name": "Lifmunk Effigy",
+                      "x": 64,
+                      "y": 46
+                    },
+                    {
+                      "id": "wt-ef-3",
+                      "name": "Lifmunk Effigy",
+                      "x": 50,
+                      "y": 60
+                    }
+                  ]
+                },
+                {
+                  "id": "rooby",
+                  "name": "Rooby Effigy",
+                  "icon": "statue-alt",
+                  "enabledByDefault": false,
+                  "markers": [
+                    {
+                      "id": "wt-rb-1",
+                      "name": "Rooby Effigy",
+                      "x": 43,
+                      "y": 68
+                    },
+                    {
+                      "id": "wt-rb-2",
+                      "name": "Rooby Effigy",
+                      "x": 57,
+                      "y": 34
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "elden-ring",
+      "name": "Elden Ring",
+      "maps": [
+        {
+          "id": "lands-between",
+          "name": "The Lands Between",
+          "image": "/maps/lands-between.svg",
+          "categories": [
+            {
+              "id": "locations",
+              "name": "Locations",
+              "items": [
+                {
+                  "id": "grace",
+                  "name": "Site of Grace",
+                  "icon": "grace",
+                  "enabledByDefault": true,
+                  "markers": [
+                    {
+                      "id": "er-gr-1",
+                      "name": "Limgrave Grace",
+                      "x": 42,
+                      "y": 62
+                    },
+                    {
+                      "id": "er-gr-2",
+                      "name": "Stormveil Approach",
+                      "x": 38,
+                      "y": 48
+                    },
+                    {
+                      "id": "er-gr-3",
+                      "name": "Liurnia Shore",
+                      "x": 36,
+                      "y": 36
+                    },
+                    {
+                      "id": "er-gr-4",
+                      "name": "Altus Plateau",
+                      "x": 52,
+                      "y": 40
+                    },
+                    {
+                      "id": "er-gr-5",
+                      "name": "Leyndell Gate",
+                      "x": 50,
+                      "y": 38
+                    },
+                    {
+                      "id": "er-gr-6",
+                      "name": "Caelid Outskirts",
+                      "x": 70,
+                      "y": 58
+                    },
+                    {
+                      "id": "er-gr-7",
+                      "name": "Dragonbarrow",
+                      "x": 76,
+                      "y": 50
+                    },
+                    {
+                      "id": "er-gr-8",
+                      "name": "Mountaintops",
+                      "x": 72,
+                      "y": 28
+                    },
+                    {
+                      "id": "er-gr-9",
+                      "name": "Weeping Peninsula",
+                      "x": 40,
+                      "y": 78
+                    },
+                    {
+                      "id": "er-gr-10",
+                      "name": "Siofra River",
+                      "x": 48,
+                      "y": 56
+                    }
+                  ]
+                },
+                {
+                  "id": "merchant",
+                  "name": "Merchant",
+                  "icon": "merchant",
+                  "enabledByDefault": false,
+                  "markers": [
+                    {
+                      "id": "er-me-1",
+                      "name": "Kalé",
+                      "x": 44,
+                      "y": 64
+                    },
+                    {
+                      "id": "er-me-2",
+                      "name": "Isolated Merchant",
+                      "x": 34,
+                      "y": 52
+                    },
+                    {
+                      "id": "er-me-3",
+                      "name": "Nomadic Merchant",
+                      "x": 68,
+                      "y": 60
+                    },
+                    {
+                      "id": "er-me-4",
+                      "name": "Hermit Merchant",
+                      "x": 54,
+                      "y": 36
+                    }
+                  ]
+                },
+                {
+                  "id": "evergaol",
+                  "name": "Evergaol",
+                  "icon": "dungeon",
+                  "enabledByDefault": false,
+                  "markers": [
+                    {
+                      "id": "er-eg-1",
+                      "name": "Stormhill Evergaol",
+                      "x": 40,
+                      "y": 50
+                    },
+                    {
+                      "id": "er-eg-2",
+                      "name": "Weeping Evergaol",
+                      "x": 38,
+                      "y": 80
+                    },
+                    {
+                      "id": "er-eg-3",
+                      "name": "Liurnia Evergaol",
+                      "x": 32,
+                      "y": 34
+                    },
+                    {
+                      "id": "er-eg-4",
+                      "name": "Altus Evergaol",
+                      "x": 56,
+                      "y": 42
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "bosses",
+              "name": "Bosses",
+              "items": [
+                {
+                  "id": "remembrance",
+                  "name": "Remembrance",
+                  "icon": "boss",
+                  "enabledByDefault": true,
+                  "markers": [
+                    {
+                      "id": "er-rm-1",
+                      "name": "Godrick the Grafted",
+                      "x": 36,
+                      "y": 46
+                    },
+                    {
+                      "id": "er-rm-2",
+                      "name": "Rennala",
+                      "x": 34,
+                      "y": 30
+                    },
+                    {
+                      "id": "er-rm-3",
+                      "name": "Starscourge Radahn",
+                      "x": 78,
+                      "y": 54
+                    },
+                    {
+                      "id": "er-rm-4",
+                      "name": "Morgott",
+                      "x": 50,
+                      "y": 36
+                    },
+                    {
+                      "id": "er-rm-5",
+                      "name": "Rykard",
+                      "x": 28,
+                      "y": 42
+                    },
+                    {
+                      "id": "er-rm-6",
+                      "name": "Malenia",
+                      "x": 62,
+                      "y": 32
+                    }
+                  ]
+                },
+                {
+                  "id": "field-boss",
+                  "name": "Field Boss",
+                  "icon": "alpha",
+                  "enabledByDefault": false,
+                  "markers": [
+                    {
+                      "id": "er-fb-1",
+                      "name": "Tree Sentinel",
+                      "x": 46,
+                      "y": 66
+                    },
+                    {
+                      "id": "er-fb-2",
+                      "name": "Night Cavalry",
+                      "x": 48,
+                      "y": 70
+                    },
+                    {
+                      "id": "er-fb-3",
+                      "name": "Deathbird",
+                      "x": 40,
+                      "y": 58
+                    },
+                    {
+                      "id": "er-fb-4",
+                      "name": "Dragon",
+                      "x": 74,
+                      "y": 62
+                    },
+                    {
+                      "id": "er-fb-5",
+                      "name": "Erdtree Avatar",
+                      "x": 58,
+                      "y": 44
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "collectibles",
+              "name": "Collectibles",
+              "items": [
+                {
+                  "id": "golden-seed",
+                  "name": "Golden Seed",
+                  "icon": "seed",
+                  "enabledByDefault": false,
+                  "markers": [
+                    {
+                      "id": "er-gs-1",
+                      "name": "Golden Seed",
+                      "x": 44,
+                      "y": 58
+                    },
+                    {
+                      "id": "er-gs-2",
+                      "name": "Golden Seed",
+                      "x": 38,
+                      "y": 40
+                    },
+                    {
+                      "id": "er-gs-3",
+                      "name": "Golden Seed",
+                      "x": 54,
+                      "y": 42
+                    },
+                    {
+                      "id": "er-gs-4",
+                      "name": "Golden Seed",
+                      "x": 72,
+                      "y": 56
+                    },
+                    {
+                      "id": "er-gs-5",
+                      "name": "Golden Seed",
+                      "x": 50,
+                      "y": 74
+                    }
+                  ]
+                },
+                {
+                  "id": "sacred-tear",
+                  "name": "Sacred Tear",
+                  "icon": "tear",
+                  "enabledByDefault": false,
+                  "markers": [
+                    {
+                      "id": "er-st-1",
+                      "name": "Sacred Tear",
+                      "x": 42,
+                      "y": 76
+                    },
+                    {
+                      "id": "er-st-2",
+                      "name": "Sacred Tear",
+                      "x": 34,
+                      "y": 38
+                    },
+                    {
+                      "id": "er-st-3",
+                      "name": "Sacred Tear",
+                      "x": 60,
+                      "y": 38
+                    },
+                    {
+                      "id": "er-st-4",
+                      "name": "Sacred Tear",
+                      "x": 70,
+                      "y": 30
+                    }
+                  ]
+                },
+                {
+                  "id": "map-fragment",
+                  "name": "Map Fragment",
+                  "icon": "note",
+                  "enabledByDefault": false,
+                  "markers": [
+                    {
+                      "id": "er-mf-1",
+                      "name": "Limgrave Map",
+                      "x": 46,
+                      "y": 60
+                    },
+                    {
+                      "id": "er-mf-2",
+                      "name": "Liurnia Map",
+                      "x": 36,
+                      "y": 34
+                    },
+                    {
+                      "id": "er-mf-3",
+                      "name": "Altus Map",
+                      "x": 54,
+                      "y": 38
+                    },
+                    {
+                      "id": "er-mf-4",
+                      "name": "Caelid Map",
+                      "x": 72,
+                      "y": 60
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "shadow-realm",
+          "name": "Realm of Shadow",
+          "image": "/maps/shadow-realm.svg",
+          "categories": [
+            {
+              "id": "locations",
+              "name": "Locations",
+              "items": [
+                {
+                  "id": "grace",
+                  "name": "Site of Grace",
+                  "icon": "grace",
+                  "enabledByDefault": true,
+                  "markers": [
+                    {
+                      "id": "sr-gr-1",
+                      "name": "Gravesite Plain",
+                      "x": 42,
+                      "y": 62
+                    },
+                    {
+                      "id": "sr-gr-2",
+                      "name": "Belurat Approach",
+                      "x": 36,
+                      "y": 48
+                    },
+                    {
+                      "id": "sr-gr-3",
+                      "name": "Scadu Altus",
+                      "x": 56,
+                      "y": 40
+                    },
+                    {
+                      "id": "sr-gr-4",
+                      "name": "Shadow Keep",
+                      "x": 58,
+                      "y": 36
+                    },
+                    {
+                      "id": "sr-gr-5",
+                      "name": "Cerulean Coast",
+                      "x": 48,
+                      "y": 78
+                    },
+                    {
+                      "id": "sr-gr-6",
+                      "name": "Abyssal Woods",
+                      "x": 68,
+                      "y": 58
+                    }
+                  ]
+                },
+                {
+                  "id": "merchant",
+                  "name": "Merchant",
+                  "icon": "merchant",
+                  "enabledByDefault": false,
+                  "markers": [
+                    {
+                      "id": "sr-me-1",
+                      "name": "Moore",
+                      "x": 46,
+                      "y": 58
+                    },
+                    {
+                      "id": "sr-me-2",
+                      "name": "Igon",
+                      "x": 70,
+                      "y": 52
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "bosses",
+              "name": "Bosses",
+              "items": [
+                {
+                  "id": "remembrance",
+                  "name": "Remembrance",
+                  "icon": "boss",
+                  "enabledByDefault": true,
+                  "markers": [
+                    {
+                      "id": "sr-rm-1",
+                      "name": "Divine Beast",
+                      "x": 34,
+                      "y": 46
+                    },
+                    {
+                      "id": "sr-rm-2",
+                      "name": "Rellana",
+                      "x": 40,
+                      "y": 42
+                    },
+                    {
+                      "id": "sr-rm-3",
+                      "name": "Messmer",
+                      "x": 58,
+                      "y": 34
+                    },
+                    {
+                      "id": "sr-rm-4",
+                      "name": "Promised Consort",
+                      "x": 50,
+                      "y": 50
+                    }
+                  ]
+                },
+                {
+                  "id": "field-boss",
+                  "name": "Field Boss",
+                  "icon": "alpha",
+                  "enabledByDefault": false,
+                  "markers": [
+                    {
+                      "id": "sr-fb-1",
+                      "name": "Furnace Golem",
+                      "x": 50,
+                      "y": 64
+                    },
+                    {
+                      "id": "sr-fb-2",
+                      "name": "Ghostflame Dragon",
+                      "x": 64,
+                      "y": 70
+                    },
+                    {
+                      "id": "sr-fb-3",
+                      "name": "Death Knight",
+                      "x": 44,
+                      "y": 40
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "collectibles",
+              "name": "Collectibles",
+              "items": [
+                {
+                  "id": "scadutree",
+                  "name": "Scadutree Fragment",
+                  "icon": "seed",
+                  "enabledByDefault": false,
+                  "markers": [
+                    {
+                      "id": "sr-sf-1",
+                      "name": "Scadutree Fragment",
+                      "x": 44,
+                      "y": 56
+                    },
+                    {
+                      "id": "sr-sf-2",
+                      "name": "Scadutree Fragment",
+                      "x": 54,
+                      "y": 42
+                    },
+                    {
+                      "id": "sr-sf-3",
+                      "name": "Scadutree Fragment",
+                      "x": 60,
+                      "y": 38
+                    },
+                    {
+                      "id": "sr-sf-4",
+                      "name": "Scadutree Fragment",
+                      "x": 40,
+                      "y": 70
+                    }
+                  ]
+                },
+                {
+                  "id": "revered",
+                  "name": "Revered Spirit Ash",
+                  "icon": "tear",
+                  "enabledByDefault": false,
+                  "markers": [
+                    {
+                      "id": "sr-rs-1",
+                      "name": "Revered Spirit Ash",
+                      "x": 38,
+                      "y": 52
+                    },
+                    {
+                      "id": "sr-rs-2",
+                      "name": "Revered Spirit Ash",
+                      "x": 62,
+                      "y": 48
+                    },
+                    {
+                      "id": "sr-rs-3",
+                      "name": "Revered Spirit Ash",
+                      "x": 50,
+                      "y": 74
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

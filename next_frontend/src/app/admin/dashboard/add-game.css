@@ -1,0 +1,112 @@
+.add-game-button {
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 8px;
+  background: #dce8f0;
+  color: #071018;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.add-game-button:hover {
+  background: #ffffff;
+}
+
+.add-game-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(4, 10, 16, 0.72);
+}
+
+.add-game-window {
+  width: 100%;
+  max-width: 380px;
+  padding: 28px 28px 24px;
+  border: 1px solid #1e3344;
+  border-radius: 16px;
+  background: #0c1822;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+}
+
+.add-game-window h2 {
+  margin: 0 0 20px;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #ededed;
+}
+
+.add-game-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.add-game-field label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #c5d4e0;
+}
+
+.add-game-field input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 11px 12px;
+  border: 1px solid #2a4256;
+  border-radius: 8px;
+  background: #071018;
+  color: #ededed;
+  font: inherit;
+  font-size: 0.95rem;
+  outline: none;
+}
+
+.add-game-field input:focus {
+  border-color: #5aa0c8;
+  box-shadow: 0 0 0 3px rgba(90, 160, 200, 0.18);
+}
+
+.add-game-error {
+  min-height: 1.2em;
+  margin-bottom: 12px;
+  font-size: 0.85rem;
+  color: #f0a0a0;
+}
+
+.add-game-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.add-game-actions button {
+  padding: 10px 14px;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.add-game-cancel {
+  border: 1px solid #2a4256;
+  background: transparent;
+  color: #c5d4e0;
+}
+
+.add-game-submit {
+  border: 0;
+  background: #dce8f0;
+  color: #071018;
+}
+
+.add-game-submit:hover {
+  background: #ffffff;
+}

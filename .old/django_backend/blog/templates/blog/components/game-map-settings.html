@@ -1,0 +1,51 @@
+{% if selected_game %}
+    <p class="kicker">Browsing game: {{ selected_game }}</p>
+{% else %}
+    <p class="kicker">All games</p>
+{% endif %}
+
+<div class="maps-stats">
+    <div class="maps-stat"><strong>{{ dashboard_stats.games }}</strong><span>Games</span></div>
+    <div class="maps-stat"><strong>{{ dashboard_stats.maps }}</strong><span>Maps</span></div>
+    <div class="maps-stat"><strong>{{ dashboard_stats.categories }}</strong><span>Categories</span></div>
+    <div class="maps-stat"><strong>{{ dashboard_stats.markers }}</strong><span>Markers</span></div>
+</div>
+
+<div class="maps-toolbar">
+    <a class="button" href="{% url 'add_map' %}{% if selected_game %}?game={{ selected_game.name }}{% endif %}">Add map</a>
+    <a class="button" href="{% url 'add_category' %}{% if selected_game %}?game={{ selected_game.name }}{% endif %}">Add category</a>
+    <a class="button" href="{% url 'add_marker' %}{% if selected_game %}?game={{ selected_game.name }}{% endif %}">Add marker</a>
+</div>
+
+<h2>Maps</h2>
+<div class="maps-grid">
+    {% for game_map in dashboard_maps %}
+        <article class="map-card">
+            <div class="map-card-preview">
+                {% if game_map.image_url %}
+                    <img src="{{ game_map.image_url }}" alt="{{ game_map.name }}">
+                {% else %}
+                    <span class="empty">No image yet</span>
+                {% endif %}
+            </div>
+            <div class="map-card-body">
+                <h3>{{ game_map.name }}</h3>
+                <p>{{ game_map.game.name }}</p>
+                <div class="map-card-meta">
+                    <span>{{ game_map.category_count }} categories</span>
+                    <span>{{ game_map.item_count }} items</span>
+                    <span>{{ game_map.marker_count }} markers</span>
+                </div>
+                <div class="map-card-actions">
+                    <a class="editor-btn" href="{% url 'map_editor' game_map.pk %}">Open visual editor</a>
+                    <a href="{% url 'map_detail' game_map.pk %}">Map details</a>
+                </div>
+            </div>
+        </article>
+    {% empty %}
+        <p class="muted">
+            No maps yet.
+            <a href="{% url 'add_map' %}{% if selected_game %}?game={{ selected_game.name }}{% endif %}">Create the first map</a>.
+        </p>
+    {% endfor %}
+</div>
