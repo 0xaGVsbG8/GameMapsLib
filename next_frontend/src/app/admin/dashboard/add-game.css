@@ -27,7 +27,9 @@
 
 .add-game-window {
   width: 100%;
-  max-width: 380px;
+  max-width: 420px;
+  max-height: min(90dvh, 760px);
+  overflow-y: auto;
   padding: 28px 28px 24px;
   border: 1px solid #1e3344;
   border-radius: 16px;
@@ -68,9 +70,23 @@
   outline: none;
 }
 
-.add-game-field input:focus {
+.add-game-field input:focus,
+.add-game-field select:focus {
   border-color: #5aa0c8;
   box-shadow: 0 0 0 3px rgba(90, 160, 200, 0.18);
+}
+
+.add-game-field select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 11px 12px;
+  border: 1px solid #2a4256;
+  border-radius: 8px;
+  background: #071018;
+  color: #ededed;
+  font: inherit;
+  font-size: 0.95rem;
+  outline: none;
 }
 
 .add-game-error {
@@ -110,3 +126,118 @@
 .add-game-submit:hover {
   background: #ffffff;
 }
+
+.add-game-submit.danger {
+  background: #c45c5c;
+  color: #ffffff;
+}
+
+.add-game-submit.danger:hover {
+  background: #e07070;
+}
+
+.add-game-actions button:disabled {
+  opacity: 0.65;
+  cursor: default;
+}
+
+.delete-game-warning {
+  margin: 0 0 16px;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: #c5d4e0;
+}
+
+.delete-game-warning strong {
+  color: #ededed;
+}
+
+.add-map-size-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.add-map-size-row .add-game-field {
+  margin-bottom: 16px;
+}
+
+.add-game-hint {
+  margin: -8px 0 16px;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: #8aa0b3;
+}
+
+.add-game-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0 0 16px;
+  color: #c5d4e0;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.add-game-check input {
+  width: auto;
+  margin-top: 3px;
+  accent-color: #5aa0c8;
+}
+
+.map-notice {
+  margin: 12px 0 20px;
+  padding: 12px 14px;
+  border: 1px solid #7a3a3a;
+  border-radius: 8px;
+  background: #2a1216;
+  color: #f0a0a0;
+  font-size: 0.95rem;
+}
+
+.browsing-title {
+  margin: 8px 0 16px;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #c5d4e0;
+}
+
+.game-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 16px 0 24px;
+}
+
+.game-list button {
+  padding: 8px 14px;
+  border: 1px solid #2a4256;
+  border-radius: 8px;
+  background: #0c1822;
+  color: #ededed;
+  font: inherit;
+  cursor: pointer;
+}
+
+.game-list button:hover,
+.game-list button.active {
+  border-color: #5aa0c8;
+  background: #122433;
+}
+
+.map-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.map-list-item {
+  padding: 10px 12px;
+  border: 1px solid #1e3344;
+  border-radius: 8px;
+  background: #0c1822;
+  color: #c5d4e0;
+}
+

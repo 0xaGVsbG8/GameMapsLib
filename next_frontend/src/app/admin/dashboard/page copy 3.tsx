@@ -12,7 +12,7 @@ import "./dashboard.css";
 
 const zoom_by = 0.2
 const min_zoom = 0.25
-const max_zoom = 12
+const max_zoom = 4
 
 function getMapPoint(
   event: MouseEvent,
@@ -235,15 +235,13 @@ export default function AdminDashboardPage() {
       const nextZoom = event.deltaY < 0 ? oldZoom + zoom_by : oldZoom - zoom_by
       const newZoom = Math.min(max_zoom, Math.max(min_zoom, nextZoom))
       if (newZoom === oldZoom) return
-      console.log(panRef.current)
-      //todo
-      const rect = image.getBoundingClientRect()
-      const ratio = newZoom / oldZoom
-      panRef.current = {
-        x: panRef.current.x + (event.clientX - (rect.left + rect.width / 2)) * (1 - ratio),
-        y: panRef.current.y + (event.clientY - (rect.top + rect.height / 2)) * (1 - ratio),
-      }
-      //todo
+
+      // const rect = image.getBoundingClientRect()
+      // const ratio = newZoom / oldZoom
+      // panRef.current = {
+      //   x: panRef.current.x + (event.clientX - (rect.left + rect.width / 2)) * (1 - ratio),
+      //   y: panRef.current.y + (event.clientY - (rect.top + rect.height / 2)) * (1 - ratio),
+      // }
       currentImgzoom.current = newZoom
       applyTransform()
     }

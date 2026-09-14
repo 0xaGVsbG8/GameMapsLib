@@ -3,12 +3,17 @@
 import { useEffect, useRef, useState } from "react";
 import "./add-game.css";
 
-type AddGameWidgetProps = {
-  onAdded?: () => void;
-  compact?: boolean;
+type AddSubcategoryWidgetProps = {
+  gameName: string;
+  categoryName: string;
+  onAdded: () => void;
 };
 
-export function AddGameWidget({ onAdded, compact = false }: AddGameWidgetProps) {
+export function AddSubcategoryWidget({
+  gameName,
+  categoryName,
+  onAdded,
+}: AddSubcategoryWidgetProps) {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState("");
   const nameRef = useRef<HTMLInputElement>(null);
@@ -38,32 +43,33 @@ export function AddGameWidget({ onAdded, compact = false }: AddGameWidgetProps) 
 
     setError("");
 
-    const response = await fetch("http://localhost:8000/blog/ManageGames", {
+    const response = await fetch("http://localhost:8000/blog/ManageSubCategories", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify({ name }),
+      body: JSON.stringify({ gameName, categoryName, name }),
     });
 
     if (!response.ok) {
       const data = await response.json().catch(() => null);
-      setError(data?.message ?? "Could not add game");
+      setError(data?.message ?? "Could not add subcategory");
       return;
     }
 
     if (nameRef.current) nameRef.current.value = "";
     close();
-    onAdded?.();
+    onAdded();
   };
 
   return (
     <>
       <button
-        className={compact ? "add-game-button compact" : "add-game-button"}
+        className="add-game-button compact"
         type="button"
         onClick={() => setOpen(true)}
+        aria-label={`Add subcategory to ${categoryName}`}
       >
-        {compact ? "+ Add game" : "Add game"}
+        +
       </button>
 
       {open && (
@@ -73,17 +79,20 @@ export function AddGameWidget({ onAdded, compact = false }: AddGameWidgetProps) 
             onClick={(event) => event.stopPropagation()}
             onSubmit={handleSubmit}
           >
-            <h2>Add game</h2>
+            <h2>Add subcategory</h2>
+            <p className="delete-game-warning">
+              Under <strong>{categoryName}</strong>
+            </p>
 
             <div className="add-game-field">
-              <label htmlFor="game-name">Game name</label>
+              <label htmlFor={`subcategory-name-${categoryName}`}>Subcategory name</label>
               <input
                 ref={nameRef}
-                id="game-name"
+                id={`subcategory-name-${categoryName}`}
                 name="name"
                 type="text"
                 maxLength={100}
-                placeholder="Enter game name"
+                placeholder="Enter subcategory name"
               />
             </div>
 

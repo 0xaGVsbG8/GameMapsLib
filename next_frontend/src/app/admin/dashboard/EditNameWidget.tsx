@@ -3,12 +3,23 @@
 import { useEffect, useRef, useState } from "react";
 import "./add-game.css";
 
-type AddGameWidgetProps = {
-  onAdded?: () => void;
-  compact?: boolean;
+type EditNameWidgetProps = {
+  title: string;
+  label?: string;
+  currentName: string;
+  ariaLabel: string;
+  onSave: (newName: string) => Promise<string | null>;
+  onRenamed: (newName: string) => void;
 };
 
-export function AddGameWidget({ onAdded, compact = false }: AddGameWidgetProps) {
+export function EditNameWidget({
+  title,
+  label = "Name",
+  currentName,
+  ariaLabel,
+  onSave,
+  onRenamed,
+}: EditNameWidgetProps) {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState("");
   const nameRef = useRef<HTMLInputElement>(null);
@@ -16,7 +27,9 @@ export function AddGameWidget({ onAdded, compact = false }: AddGameWidgetProps) 
   useEffect(() => {
     if (!open) return;
 
+    if (nameRef.current) nameRef.current.value = currentName;
     nameRef.current?.focus();
+    nameRef.current?.select();
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") setOpen(false);
@@ -24,7 +37,7 @@ export function AddGameWidget({ onAdded, compact = false }: AddGameWidgetProps) 
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [open]);
+  }, [open, currentName]);
 
   const close = () => {
     setOpen(false);
@@ -33,37 +46,38 @@ export function AddGameWidget({ onAdded, compact = false }: AddGameWidgetProps) 
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const name = nameRef.current?.value.trim();
-    if (!name) return;
-
-    setError("");
-
-    const response = await fetch("http://localhost:8000/blog/ManageGames", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ name }),
-    });
-
-    if (!response.ok) {
-      const data = await response.json().catch(() => null);
-      setError(data?.message ?? "Could not add game");
+    const newName = nameRef.current?.value.trim();
+    if (!newName) return;
+    if (newName === currentName) {
+      close();
       return;
     }
 
-    if (nameRef.current) nameRef.current.value = "";
+    setError("");
+    const message = await onSave(newName);
+    if (message) {
+      setError(message);
+      return;
+    }
+
     close();
-    onAdded?.();
+    onRenamed(newName);
   };
 
   return (
     <>
       <button
-        className={compact ? "add-game-button compact" : "add-game-button"}
+        className="ide-row-edit"
         type="button"
+        aria-label={ariaLabel}
         onClick={() => setOpen(true)}
       >
-        {compact ? "+ Add game" : "Add game"}
+        <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            fill="currentColor"
+            d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"
+          />
+        </svg>
       </button>
 
       {open && (
@@ -73,17 +87,17 @@ export function AddGameWidget({ onAdded, compact = false }: AddGameWidgetProps) 
             onClick={(event) => event.stopPropagation()}
             onSubmit={handleSubmit}
           >
-            <h2>Add game</h2>
+            <h2>{title}</h2>
 
             <div className="add-game-field">
-              <label htmlFor="game-name">Game name</label>
+              <label htmlFor={`rename-${currentName}`}>{label}</label>
               <input
                 ref={nameRef}
-                id="game-name"
+                id={`rename-${currentName}`}
                 name="name"
                 type="text"
                 maxLength={100}
-                placeholder="Enter game name"
+                placeholder={label}
               />
             </div>
 
@@ -94,7 +108,7 @@ export function AddGameWidget({ onAdded, compact = false }: AddGameWidgetProps) 
                 Cancel
               </button>
               <button className="add-game-submit" type="submit">
-                Add
+                Save
               </button>
             </div>
           </form>

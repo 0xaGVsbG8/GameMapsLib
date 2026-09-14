@@ -3,12 +3,17 @@
 import { useEffect, useRef, useState } from "react";
 import "./add-game.css";
 
-type AddGameWidgetProps = {
-  onAdded?: () => void;
+type AddCategoryWidgetProps = {
+  gameName: string;
+  onAdded: () => void;
   compact?: boolean;
 };
 
-export function AddGameWidget({ onAdded, compact = false }: AddGameWidgetProps) {
+export function AddCategoryWidget({
+  gameName,
+  onAdded,
+  compact = false,
+}: AddCategoryWidgetProps) {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState("");
   const nameRef = useRef<HTMLInputElement>(null);
@@ -38,22 +43,22 @@ export function AddGameWidget({ onAdded, compact = false }: AddGameWidgetProps) 
 
     setError("");
 
-    const response = await fetch("http://localhost:8000/blog/ManageGames", {
+    const response = await fetch("http://localhost:8000/blog/ManageCategories", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify({ name }),
+      body: JSON.stringify({ gameName, name }),
     });
 
     if (!response.ok) {
       const data = await response.json().catch(() => null);
-      setError(data?.message ?? "Could not add game");
+      setError(data?.message ?? "Could not add category");
       return;
     }
 
     if (nameRef.current) nameRef.current.value = "";
     close();
-    onAdded?.();
+    onAdded();
   };
 
   return (
@@ -63,7 +68,7 @@ export function AddGameWidget({ onAdded, compact = false }: AddGameWidgetProps) 
         type="button"
         onClick={() => setOpen(true)}
       >
-        {compact ? "+ Add game" : "Add game"}
+        {compact ? "+ Category" : "Add category"}
       </button>
 
       {open && (
@@ -73,17 +78,17 @@ export function AddGameWidget({ onAdded, compact = false }: AddGameWidgetProps) 
             onClick={(event) => event.stopPropagation()}
             onSubmit={handleSubmit}
           >
-            <h2>Add game</h2>
+            <h2>Add category</h2>
 
             <div className="add-game-field">
-              <label htmlFor="game-name">Game name</label>
+              <label htmlFor="category-name">Category name</label>
               <input
                 ref={nameRef}
-                id="game-name"
+                id="category-name"
                 name="name"
                 type="text"
                 maxLength={100}
-                placeholder="Enter game name"
+                placeholder="Enter category name"
               />
             </div>
 

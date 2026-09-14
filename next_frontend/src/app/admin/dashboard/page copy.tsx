@@ -2,7 +2,6 @@
 import { useEffect, useRef, useState } from "react";
 import { AddGameWidget } from "./AddGameWidget";
 import { AddMapWidget } from "./AddMapWidget";
-import { AddMarkerWidget, MarkerClick } from "./AddMarkerWidget";
 import { CategorySidebar } from "./CategorySidebar";
 import { DeleteGameWidget } from "./DeleteGameWidget";
 import { EditNameWidget } from "./EditNameWidget";
@@ -12,55 +11,6 @@ import "./dashboard.css";
 
 const zoom_by = 0.2
 const min_zoom = 0.25
-const max_zoom = 12
-
-function getMapPoint(
-  event: MouseEvent,
-  image: HTMLImageElement,
-  gameInfo: GameInfo | null,
-) {
-  const rect = image.getBoundingClientRect()
-  const naturalWidth = image.naturalWidth
-  const naturalHeight = image.naturalHeight
-  if (!naturalWidth || !naturalHeight || !rect.width || !rect.height) {
-    return null
-  }
-
-  const scale = Math.min(rect.width / naturalWidth, rect.height / naturalHeight)
-  const renderedWidth = naturalWidth * scale
-  const renderedHeight = naturalHeight * scale
-  const offsetX = (rect.width - renderedWidth) / 2
-  const offsetY = (rect.height - renderedHeight) / 2
-  const displayX = event.clientX - rect.left - offsetX
-  const displayY = event.clientY - rect.top - offsetY
-
-  if (
-    displayX < 0 ||
-    displayY < 0 ||
-    displayX > renderedWidth ||
-    displayY > renderedHeight
-  ) {
-    return null
-  }
-
-  let finalX = Math.round(displayX * (naturalWidth / renderedWidth))
-  let finalY = Math.round(displayY * (naturalHeight / renderedHeight))
-
-  const ORIGIN_X = gameInfo?.maps[0].origin_x
-  const ORIGIN_Y = gameInfo?.maps[0].origin_y
-  const UNITSCALE = gameInfo?.maps[0].pixels_per_unit
-
-  if (ORIGIN_X && ORIGIN_Y && UNITSCALE) {
-    const imagex = Math.round(displayX * (naturalWidth / renderedWidth))
-    const imagey = Math.round(displayY * (naturalHeight / renderedHeight))
-    const diffx = imagex - ORIGIN_X
-    const diffy = ORIGIN_Y - imagey
-    finalX = Math.round((diffx / UNITSCALE) * 100) / 100
-    finalY = Math.round((diffy / UNITSCALE) * 100) / 100
-  }
-
-  return { x: finalX, y: finalY, displayX, displayY }
-}
 
 export default function AdminDashboardPage() {
 
@@ -69,7 +19,6 @@ export default function AdminDashboardPage() {
   const [gameInfo, setGameInfo] = useState<GameInfo | null>(null)
   const [mapNotice, setMapNotice] = useState("")
   const [gameToDelete, setGameToDelete] = useState<string | null>(null)
-  const [markerClick, setMarkerClick] = useState<MarkerClick | null>(null)
   const mapRef = useRef<HTMLImageElement>(null)
   const coordXRef = useRef<HTMLSpanElement>(null)
   const coordYRef = useRef<HTMLSpanElement>(null)
@@ -79,6 +28,7 @@ export default function AdminDashboardPage() {
   const isTogglingMouse = useRef<boolean>(false)
   const panRef = useRef({ x: 0, y: 0 })
   const lastPointerRef = useRef({ x: 0, y: 0 })
+
 
 
 
@@ -142,10 +92,73 @@ export default function AdminDashboardPage() {
     if (!image) return
 
     const toPixels = (event: MouseEvent) => {
-      const point = getMapPoint(event, image, gameInfo)
-      if (!point) return null
-      proccessedCORDS.current = { x: point.displayX, y: point.y }
-      return { x: point.x, y: point.y }
+      const rect = image.getBoundingClientRect()
+      const naturalWidth = image.naturalWidth
+      const naturalHeight = image.naturalHeight
+      if (!naturalWidth || !naturalHeight || !rect.width || !rect.height) {
+        return null
+      }
+
+      const scale = Math.min(rect.width / naturalWidth, rect.height / naturalHeight)
+      const renderedWidth = naturalWidth * scale
+      const renderedHeight = naturalHeight * scale
+      const offsetX = (rect.width - renderedWidth) / 2
+      const offsetY = (rect.height - renderedHeight) / 2
+      const displayX = event.clientX - rect.left - offsetX
+      const displayY = event.clientY - rect.top - offsetY
+
+      if (
+        displayX < 0 ||
+        displayY < 0 ||
+        displayX > renderedWidth ||
+        displayY > renderedHeight
+      ) {
+        return null
+      }
+
+      let finalX = Math.round(displayX * (naturalWidth / renderedWidth))
+      let finalY =  Math.round(displayY * (naturalHeight / renderedHeight))
+      // console.log(finalX,displayX,'2')
+
+      proccessedCORDS.current = {x: displayX, y: finalY}
+
+      
+      const ORIGIN_X = gameInfo?.maps[0].origin_x
+      const ORIGIN_Y = gameInfo?.maps[0].origin_y
+      const UNITSCALE  = gameInfo?.maps[0].pixels_per_unit
+
+
+
+      
+      if(ORIGIN_X && ORIGIN_Y && UNITSCALE){
+
+        const imagex = Math.round(displayX * (naturalWidth / renderedWidth))
+        const imagey = Math.round(displayY * (naturalHeight / renderedHeight))
+  
+        const diffx=imagex-ORIGIN_X
+        const diffy=ORIGIN_Y - imagey
+
+        const gamex = Math.round((diffx / UNITSCALE) * 100) / 100
+        const gamey = Math.round((diffy / UNITSCALE) * 100) / 100
+
+        finalX = gamex
+        finalY = gamey
+  
+        // console.log(gamex, gamey)
+
+      }
+
+      // if()
+
+
+
+      // calc_x
+      
+      return {
+        x: finalX,
+        y:finalY,
+        // y:2
+      }
     }
 
     const onMove = (event: MouseEvent) => {
@@ -161,53 +174,19 @@ export default function AdminDashboardPage() {
     }
   }, [mapSrc])
 
-
   useEffect(() => {
     const image = mapRef.current
     if (!image) return
-
-    const onContextMenu = (event: MouseEvent) => {
-      event.preventDefault()
-      const point = getMapPoint(event, image, gameInfo)
-      if (!point) {
-        setMarkerClick(null)
-        return
-      }
-      setMarkerClick({
-        screenX: event.clientX,
-        screenY: event.clientY,
-        mapX: point.x,
-        mapY: point.y,
-      })
-    }
-
-    image.addEventListener("contextmenu", onContextMenu)
-    return () => {
-      image.removeEventListener("contextmenu", onContextMenu)
-    }
-  }, [mapSrc, gameInfo])
-
-
-
-  useEffect(() => {
-    const image = mapRef.current
-    if (!image) return
-
-    panRef.current = { x: 0, y: 0 }
-    currentImgzoom.current = 1
-    isTogglingMouse.current = false
 
     const applyTransform = () => {
       image.style.transform = `translate(${panRef.current.x}px, ${panRef.current.y}px) scale(${currentImgzoom.current})`
     }
-    applyTransform()
 
     const onPointerDown = (event: PointerEvent) => {
       if (event.button !== 0) return
       event.preventDefault()
       isTogglingMouse.current = true
       lastPointerRef.current = { x: event.clientX, y: event.clientY }
-      image.classList.add("is-panning")
       image.setPointerCapture(event.pointerId)
     }
 
@@ -223,7 +202,6 @@ export default function AdminDashboardPage() {
 
     const onPointerUp = (event: PointerEvent) => {
       isTogglingMouse.current = false
-      image.classList.remove("is-panning")
       if (image.hasPointerCapture(event.pointerId)) {
         image.releasePointerCapture(event.pointerId)
       }
@@ -231,20 +209,11 @@ export default function AdminDashboardPage() {
 
     const onWheel = (event: WheelEvent) => {
       event.preventDefault()
-      const oldZoom = currentImgzoom.current
-      const nextZoom = event.deltaY < 0 ? oldZoom + zoom_by : oldZoom - zoom_by
-      const newZoom = Math.min(max_zoom, Math.max(min_zoom, nextZoom))
-      if (newZoom === oldZoom) return
-      console.log(panRef.current)
-      //todo
-      const rect = image.getBoundingClientRect()
-      const ratio = newZoom / oldZoom
-      panRef.current = {
-        x: panRef.current.x + (event.clientX - (rect.left + rect.width / 2)) * (1 - ratio),
-        y: panRef.current.y + (event.clientY - (rect.top + rect.height / 2)) * (1 - ratio),
-      }
-      //todo
-      currentImgzoom.current = newZoom
+      const nextZoom =
+        event.deltaY < 0
+          ? currentImgzoom.current + zoom_by
+          : currentImgzoom.current - zoom_by
+      currentImgzoom.current = Math.max(min_zoom, nextZoom)
       applyTransform()
     }
 
@@ -259,7 +228,6 @@ export default function AdminDashboardPage() {
     image.addEventListener("wheel", onWheel, { passive: false })
     image.addEventListener("dragstart", onDragStart)
     return () => {
-      image.classList.remove("is-panning")
       image.removeEventListener("pointerdown", onPointerDown)
       image.removeEventListener("pointermove", onPointerMove)
       image.removeEventListener("pointerup", onPointerUp)
@@ -390,15 +358,6 @@ export default function AdminDashboardPage() {
             gameName={gameToDelete}
             onClose={() => setGameToDelete(null)}
             onDeleted={handleDeleteGame}
-          />
-        )}
-        {markerClick && browsingGame && (
-          <AddMarkerWidget
-            gameName={browsingGame}
-            categories={gameInfo?.categories ?? []}
-            click={markerClick}
-            onClose={() => setMarkerClick(null)}
-            onAdded={() => handleGetGameInfo(browsingGame)}
           />
         )}
       </div>
