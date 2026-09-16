@@ -18,6 +18,7 @@ export type GameMapInfo = {
 export type GameItem = {
     id: number
     name: string
+    unique_token: string
     x: number
     y: number
 }
@@ -37,4 +38,5 @@ export type GameInfo = {
     maps: GameMapInfo[]
     categories?: GameCategory[]
     map: "exists" | "not exists"
+    public?: boolean
 }

@@ -1,6 +1,9 @@
 import os
+import shutil
 from io import BytesIO
+from pathlib import Path
 
+from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 from django.db import IntegrityError, transaction
@@ -183,6 +186,7 @@ class getGameInfo(APIView):
             "maps": maps,
             "categories": categories,
             "map": "exists" if has_image else "not exists",
+            "public": game.public,
         })
 
 
@@ -210,6 +214,7 @@ class ManageGame(APIView):
                 status=status.HTTP_409_CONFLICT,
             )
 
+        _ensure_game_media(name)
         return Response({"name": name}, status=status.HTTP_201_CREATED)
     
     
@@ -233,20 +238,19 @@ class ManageGame(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
+        _delete_game_media(name)
         return Response({"name": name}, status=status.HTTP_200_OK)
 
     def patch(self, request):
         name = (request.data.get("name") or "").strip()
         new_name = (request.data.get("newName") or "").strip()
+        has_public = "public" in request.data
 
-        if not name or not new_name:
+        if not name:
             return Response(
-                {"message": "Current name and new name are required"},
+                {"message": "Game name is required"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
-        if name == new_name:
-            return Response({"name": new_name, "oldName": name})
 
         game = Games.objects.filter(name=name).first()
         if game is None:
@@ -255,27 +259,110 @@ class ManageGame(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
+        if has_public and not new_name:
+            game.public = _parse_bool(request.data.get("public"))
+            game.save(update_fields=["public"])
+            return Response({"name": game.name, "public": game.public})
+
+        if not new_name:
+            return Response(
+                {"message": "Current name and new name are required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if name == new_name:
+            return Response({
+                "name": new_name,
+                "oldName": name,
+                "public": game.public,
+            })
+
         if Games.objects.filter(name=new_name).exists():
             return Response(
                 {"message": "A game with that name already exists"},
                 status=status.HTTP_409_CONFLICT,
             )
 
+        public_value = (
+            _parse_bool(request.data.get("public")) if has_public else game.public
+        )
+
         with transaction.atomic():
-            renamed = Games.objects.create(name=new_name)
+            renamed = Games.objects.create(name=new_name, public=public_value)
             GameMaps.objects.filter(GameName=game).update(GameName=renamed)
             ItemsCategories.objects.filter(GameName=game).update(GameName=renamed)
             ItemsSubCategories.objects.filter(GameName=game).update(GameName=renamed)
             Items.objects.filter(GameName=game).update(GameName=renamed)
             game.delete()
 
-        return Response({"name": new_name, "oldName": name})
+        _rename_game_media(name, new_name)
+
+        return Response({
+            "name": new_name,
+            "oldName": name,
+            "public": public_value,
+        })
 
 
 def _parse_bool(value):
     if isinstance(value, bool):
         return value
     return str(value or "").strip().lower() in ("true", "1", "on", "yes")
+
+
+def _game_folder(game_name):
+    folder = get_valid_filename((game_name or "").strip())
+    return folder or "game"
+
+
+def _game_maps_prefix(game_name):
+    return f"{_game_folder(game_name)}/maps"
+
+
+def _ensure_game_media(game_name):
+    maps_dir = Path(settings.MEDIA_ROOT) / _game_folder(game_name) / "maps"
+    maps_dir.mkdir(parents=True, exist_ok=True)
+    return _game_maps_prefix(game_name)
+
+
+def _delete_game_media(game_name):
+    folder = Path(settings.MEDIA_ROOT) / _game_folder(game_name)
+    if folder.is_dir():
+        shutil.rmtree(folder)
+
+
+def _rename_game_media(old_name, new_name):
+    old_folder = Path(settings.MEDIA_ROOT) / _game_folder(old_name)
+    new_folder = Path(settings.MEDIA_ROOT) / _game_folder(new_name)
+    if old_folder.is_dir() and old_folder.resolve() != new_folder.resolve():
+        if new_folder.exists():
+            shutil.rmtree(new_folder)
+        new_folder.parent.mkdir(parents=True, exist_ok=True)
+        old_folder.rename(new_folder)
+
+    old_prefix = f"{_game_folder(old_name)}/"
+    new_prefix = f"{_game_folder(new_name)}/"
+    maps_prefix = f"{_game_maps_prefix(new_name)}/"
+    _ensure_game_media(new_name)
+
+    for game_map in GameMaps.objects.filter(GameName_id=new_name):
+        path = (game_map.image_path or "").strip()
+        if not path:
+            continue
+        if path.startswith(old_prefix):
+            game_map.image_path = new_prefix + path[len(old_prefix):]
+            game_map.save(update_fields=["image_path"])
+            continue
+        if path.startswith("maps/") and not path.startswith(maps_prefix):
+            filename = os.path.basename(path)
+            new_path = f"{_game_maps_prefix(new_name)}/{filename}"
+            old_file = Path(settings.MEDIA_ROOT) / path
+            new_file = Path(settings.MEDIA_ROOT) / new_path
+            new_file.parent.mkdir(parents=True, exist_ok=True)
+            if old_file.exists() and old_file.resolve() != new_file.resolve():
+                shutil.move(str(old_file), str(new_file))
+            game_map.image_path = new_path
+            game_map.save(update_fields=["image_path"])
 
 
 def _parse_coordinate_fields(data):
@@ -314,7 +401,7 @@ def _image_format_and_name(image, filename):
     return fmt, f"{root}{ext_map.get(fmt, ext or '.png')}"
 
 
-def _save_image_to_size(source, filename, width, height):
+def _save_image_to_size(source, filename, width, height, game_name):
     source.seek(0)
     image = Image.open(source)
     image.load()
@@ -330,21 +417,24 @@ def _save_image_to_size(source, filename, width, height):
         save_kwargs["optimize"] = True
     image.save(buffer, **save_kwargs)
     buffer.seek(0)
-    return default_storage.save(f"maps/{name}", ContentFile(buffer.read(), name=name))
+    dest = f"{_game_maps_prefix(game_name)}/{name}"
+    return default_storage.save(dest, ContentFile(buffer.read(), name=name))
 
 
-def _store_uploaded_image(uploaded, width, height):
+def _store_uploaded_image(uploaded, width, height, game_name):
+    _ensure_game_media(game_name)
     uploaded.seek(0)
     image = Image.open(uploaded)
     image.load()
     filename = uploaded.name
     if image.size == (width, height):
         uploaded.seek(0)
-        return default_storage.save(f"maps/{get_valid_filename(filename)}", uploaded)
-    return _save_image_to_size(uploaded, filename, width, height)
+        dest = f"{_game_maps_prefix(game_name)}/{get_valid_filename(filename)}"
+        return default_storage.save(dest, uploaded)
+    return _save_image_to_size(uploaded, filename, width, height, game_name)
 
 
-def _scale_stored_image(image_path, width, height):
+def _scale_stored_image(image_path, width, height, game_name):
     if not image_path or not default_storage.exists(image_path):
         return image_path
     with default_storage.open(image_path, "rb") as fh:
@@ -356,7 +446,7 @@ def _scale_stored_image(image_path, width, height):
     if current_size == (width, height):
         return image_path
     original.seek(0)
-    new_path = _save_image_to_size(original, filename, width, height)
+    new_path = _save_image_to_size(original, filename, width, height, game_name)
     if new_path != image_path and default_storage.exists(image_path):
         default_storage.delete(image_path)
     return new_path
@@ -429,9 +519,9 @@ class addMap(APIView):
             if image:
                 if image_path and default_storage.exists(image_path):
                     default_storage.delete(image_path)
-                image_path = _store_uploaded_image(image, width, height)
+                image_path = _store_uploaded_image(image, width, height, game_name)
             else:
-                image_path = _scale_stored_image(image_path, width, height)
+                image_path = _scale_stored_image(image_path, width, height, game_name)
 
             if map_name != existing.Map_name:
                 if GameMaps.objects.filter(Map_name=map_name).exists():
@@ -469,7 +559,7 @@ class addMap(APIView):
                 }
             )
 
-        image_path = _store_uploaded_image(image, width, height) if image else ""
+        image_path = _store_uploaded_image(image, width, height, game_name) if image else ""
 
         try:
             GameMaps.objects.create(
@@ -583,6 +673,48 @@ class ManageCategories(APIView):
             )
 
         return Response({"name": new_name, "oldName": name})
+
+    def delete(self, request):
+        game_name = (
+            request.data.get("gameName")
+            or request.query_params.get("gameName")
+            or ""
+        ).strip()
+        name = (
+            request.data.get("name")
+            or request.query_params.get("name")
+            or ""
+        ).strip()
+
+        if not game_name:
+            return Response(
+                {"message": "Game name is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not name:
+            return Response(
+                {"message": "Category name is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        game = Games.objects.filter(name=game_name).first()
+        if game is None:
+            return Response(
+                {"message": "Game not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        deleted, _ = ItemsCategories.objects.filter(
+            GameName=game,
+            CategoryName=name,
+        ).delete()
+        if not deleted:
+            return Response(
+                {"message": "Category not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        return Response({"name": name}, status=status.HTTP_200_OK)
 
 
 class ManageSubCategories(APIView):
@@ -714,6 +846,72 @@ class ManageSubCategories(APIView):
             {"name": new_name, "oldName": name, "categoryName": category_name}
         )
 
+    def delete(self, request):
+        game_name = (
+            request.data.get("gameName")
+            or request.query_params.get("gameName")
+            or ""
+        ).strip()
+        category_name = (
+            request.data.get("categoryName")
+            or request.query_params.get("categoryName")
+            or ""
+        ).strip()
+        name = (
+            request.data.get("name")
+            or request.query_params.get("name")
+            or ""
+        ).strip()
+
+        if not game_name:
+            return Response(
+                {"message": "Game name is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not category_name:
+            return Response(
+                {"message": "Category name is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not name:
+            return Response(
+                {"message": "Subcategory name is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        game = Games.objects.filter(name=game_name).first()
+        if game is None:
+            return Response(
+                {"message": "Game not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        category = ItemsCategories.objects.filter(
+            GameName=game,
+            CategoryName=category_name,
+        ).first()
+        if category is None:
+            return Response(
+                {"message": "Category not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        deleted, _ = ItemsSubCategories.objects.filter(
+            GameName=game,
+            PrimalCategory=category,
+            SubCategoryName=name,
+        ).delete()
+        if not deleted:
+            return Response(
+                {"message": "Subcategory not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        return Response(
+            {"name": name, "categoryName": category_name},
+            status=status.HTTP_200_OK,
+        )
+
 
 class ManageItems(APIView):
     authentication_classes = [CookieJWTAuthentication]
@@ -797,4 +995,41 @@ class ManageItems(APIView):
             },
             status=status.HTTP_201_CREATED,
         )
+
+    def delete(self, request):
+        game_name = (
+            request.data.get("gameName")
+            or request.query_params.get("gameName")
+            or ""
+        ).strip()
+        item_id = request.data.get("id") or request.query_params.get("id")
+
+        if not game_name:
+            return Response(
+                {"message": "Game name is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            item_id = int(item_id)
+        except (TypeError, ValueError):
+            return Response(
+                {"message": "Item id is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        game = Games.objects.filter(name=game_name).first()
+        if game is None:
+            return Response(
+                {"message": "Game not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        deleted, _ = Items.objects.filter(id=item_id, GameName=game).delete()
+        if not deleted:
+            return Response(
+                {"message": "Item not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        return Response({"id": item_id}, status=status.HTTP_200_OK)
  

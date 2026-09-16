@@ -2,15 +2,21 @@
 
 import { useState } from "react";
 import { AddCategoryWidget } from "./AddCategoryWidget";
+import { AddItemWidget } from "./AddItemWidget";
 import { AddSubcategoryWidget } from "./AddSubcategoryWidget";
 import { EditNameWidget } from "./EditNameWidget";
 import { GameCategory } from "./types";
+import "./add-game.css";
 
 type CategorySidebarProps = {
   gameName: string;
   categories: GameCategory[];
   onChanged: () => void;
 };
+
+type PendingDelete =
+  | { kind: "category"; name: string }
+  | { kind: "subcategory"; categoryName: string; name: string };
 
 async function renameRequest(
   url: string,
@@ -28,12 +34,50 @@ async function renameRequest(
   return data?.message ?? "Could not rename";
 }
 
+async function deleteRequest(
+  url: string,
+  body: Record<string, string | number>,
+): Promise<string | null> {
+  const response = await fetch(url, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(body),
+  });
+
+  if (response.ok) return null;
+  const data = await response.json().catch(() => null);
+  return data?.message ?? "Could not delete";
+}
+
+function DeleteButton({
+  label,
+  onClick,
+}: {
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      className="ide-game-delete"
+      aria-label={label}
+      onClick={onClick}
+    >
+      ×
+    </button>
+  );
+}
+
 export function CategorySidebar({
   gameName,
   categories,
   onChanged,
 }: CategorySidebarProps) {
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(null);
+  const [deleteError, setDeleteError] = useState("");
+  const [deleteBusy, setDeleteBusy] = useState(false);
 
   const toggleSubcategory = (key: string) => {
     setExpanded((current) => {
@@ -43,6 +87,67 @@ export function CategorySidebar({
       return next;
     });
   };
+
+  const closeDelete = () => {
+    if (deleteBusy) return;
+    setPendingDelete(null);
+    setDeleteError("");
+  };
+
+  const confirmDelete = async () => {
+    if (!pendingDelete || deleteBusy) return;
+    setDeleteError("");
+    setDeleteBusy(true);
+
+    let message: string | null = null;
+    if (pendingDelete.kind === "category") {
+      message = await deleteRequest("http://localhost:8000/blog/ManageCategories", {
+        gameName,
+        name: pendingDelete.name,
+      });
+    } else {
+      message = await deleteRequest(
+        "http://localhost:8000/blog/ManageSubCategories",
+        {
+          gameName,
+          categoryName: pendingDelete.categoryName,
+          name: pendingDelete.name,
+        },
+      );
+    }
+
+    if (message) {
+      setDeleteError(message);
+      setDeleteBusy(false);
+      return;
+    }
+
+    setPendingDelete(null);
+    setDeleteBusy(false);
+    onChanged();
+  };
+
+  const deleteItem = async (id: number) => {
+    const message = await deleteRequest("http://localhost:8000/blog/ManageItems", {
+      gameName,
+      id,
+    });
+    if (!message) onChanged();
+  };
+
+  const deleteTitle =
+    pendingDelete?.kind === "category"
+      ? `Delete ${pendingDelete.name}?`
+      : pendingDelete
+        ? `Delete ${pendingDelete.name}?`
+        : "";
+
+  const deleteWarning =
+    pendingDelete?.kind === "category"
+      ? `This will permanently delete ${pendingDelete.name} and all of its subcategories and items.`
+      : pendingDelete
+        ? `This will permanently delete ${pendingDelete.name} and all of its items.`
+        : "";
 
   return (
     <aside className="ide-right-sidebar">
@@ -76,6 +181,12 @@ export function CategorySidebar({
                     gameName={gameName}
                     categoryName={category.name}
                     onAdded={onChanged}
+                  />
+                  <DeleteButton
+                    label={`Delete ${category.name}`}
+                    onClick={() =>
+                      setPendingDelete({ kind: "category", name: category.name })
+                    }
                   />
                 </div>
               </div>
@@ -118,6 +229,22 @@ export function CategorySidebar({
                           }
                           onRenamed={onChanged}
                         />
+                        <AddItemWidget
+                          gameName={gameName}
+                          categoryName={category.name}
+                          subcategoryName={subcategory.name}
+                          onAdded={onChanged}
+                        />
+                        <DeleteButton
+                          label={`Delete ${subcategory.name}`}
+                          onClick={() =>
+                            setPendingDelete({
+                              kind: "subcategory",
+                              categoryName: category.name,
+                              name: subcategory.name,
+                            })
+                          }
+                        />
                       </div>
                     </div>
 
@@ -125,7 +252,13 @@ export function CategorySidebar({
                       (items.length ? (
                         items.map((item) => (
                           <div className="ide-item-row" key={item.id}>
-                            {item.name}
+                            <span className="ide-item-name">{item.name}</span>
+                            <div className="ide-row-actions">
+                              <DeleteButton
+                                label={`Delete ${item.name}`}
+                                onClick={() => deleteItem(item.id)}
+                              />
+                            </div>
                           </div>
                         ))
                       ) : (
@@ -140,6 +273,39 @@ export function CategorySidebar({
           <div className="ide-category-empty">No categories yet</div>
         )}
       </div>
+
+      {pendingDelete && (
+        <div className="add-game-overlay" onClick={closeDelete}>
+          <div
+            className="add-game-window"
+            onClick={(event) => event.stopPropagation()}
+            role="dialog"
+            aria-labelledby="delete-sidebar-title"
+          >
+            <h2 id="delete-sidebar-title">{deleteTitle}</h2>
+            <p className="delete-game-warning">{deleteWarning}</p>
+            <div className="add-game-error">{deleteError}</div>
+            <div className="add-game-actions">
+              <button
+                className="add-game-cancel"
+                type="button"
+                onClick={closeDelete}
+                disabled={deleteBusy}
+              >
+                Cancel
+              </button>
+              <button
+                className="add-game-submit danger"
+                type="button"
+                onClick={confirmDelete}
+                disabled={deleteBusy}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </aside>
   );
 }

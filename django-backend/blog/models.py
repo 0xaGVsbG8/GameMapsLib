@@ -1,4 +1,5 @@
 from django.db import models
+import uuid
 
 # Create your models here.
 
@@ -98,6 +99,12 @@ class ItemsSubCategories(models.Model):
         on_delete=models.CASCADE,
         related_name="item_subcategories"
     )
+    
+    Default_icon = models.CharField(
+        max_length=200,
+        null=True
+    ) #path
+    
  
     def __str__(self):
         return self.SubCategoryName
@@ -134,8 +141,18 @@ class Items(models.Model):
         related_name="Items"
     )
     
+    Unique_token =  models.CharField(
+        max_length=36,
+        default=uuid.uuid4,
+        # unique=True
+    )
     
-    
+    icon = models.CharField(
+        max_length=36,
+        default=uuid.uuid4,
+        null=True,
+        # unique=True
+    ) #path
     
     x_location = models.IntegerField()
     y_location = models.IntegerField()
