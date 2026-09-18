@@ -169,6 +169,15 @@
   color: #8aa0b3;
 }
 
+.add-game-hint-link {
+  color: #8ec7e6;
+  text-decoration: underline;
+}
+
+.add-game-hint-link:hover {
+  color: #ffffff;
+}
+
 .add-game-check {
   display: flex;
   align-items: flex-start;

@@ -110,6 +110,7 @@ export function getGameItems(gameInfo: GameInfo | null) {
     category.subcategories.flatMap((subcategory) =>
       (subcategory.items ?? []).map((item) => ({
         ...item,
+        categoryName: category.name,
         subcategoryName: subcategory.name,
         icon_src: item.icon || subcategory.default_icon,
       })),

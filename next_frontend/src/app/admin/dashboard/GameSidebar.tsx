@@ -7,15 +7,21 @@ import { apiUrl } from "../api";
 type GameSidebarProps = {
   games: string[];
   browsingGame: string | null;
+  open?: boolean;
+  readOnly?: boolean;
+  onToggle?: () => void;
   onSelect: (name: string) => void;
-  onAdded: () => void;
-  onRenamed: (oldName: string, newName: string) => void;
-  onDelete: (name: string) => void;
+  onAdded?: () => void;
+  onRenamed?: (oldName: string, newName: string) => void;
+  onDelete?: (name: string) => void;
 };
 
 export function GameSidebar({
   games,
   browsingGame,
+  open = true,
+  readOnly = false,
+  onToggle,
   onSelect,
   onAdded,
   onRenamed,
@@ -23,9 +29,10 @@ export function GameSidebar({
 }: GameSidebarProps) {
   return (
     <aside className="ide-sidebar">
+      <div className="ide-sidebar-body">
       <div className="ide-sidebar-header">
         <span className="ide-sidebar-title">GAMES/MAPS</span>
-        <AddGameWidget compact onAdded={onAdded} />
+        {!readOnly && onAdded && <AddGameWidget compact onAdded={onAdded} />}
       </div>
 
       <nav className="ide-game-list">
@@ -43,6 +50,7 @@ export function GameSidebar({
               {game}
             </button>
             <div className="ide-row-actions">
+              {!readOnly && onRenamed && (
               <EditNameWidget
                 title="Rename game"
                 label="Game name"
@@ -61,6 +69,8 @@ export function GameSidebar({
                 }}
                 onRenamed={(newName) => onRenamed(game, newName)}
               />
+              )}
+              {!readOnly && onDelete && (
               <button
                 type="button"
                 className="ide-game-delete"
@@ -69,10 +79,23 @@ export function GameSidebar({
               >
                 ×
               </button>
+              )}
             </div>
           </div>
         ))}
       </nav>
+      </div>
+      {onToggle && (
+        <button
+          type="button"
+          className="ide-panel-arrow"
+          aria-label={open ? "Hide games" : "Show games"}
+          aria-pressed={open}
+          onClick={onToggle}
+        >
+          <span className={open ? "ide-panel-caret is-left" : "ide-panel-caret is-right"} />
+        </button>
+      )}
     </aside>
   );
 }

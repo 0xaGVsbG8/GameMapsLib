@@ -4,6 +4,8 @@ from .api.views.add_map import addMap
 from .api.views.auth_user import AuthUserView
 from .api.views.get_game_info import getGameInfo
 from .api.views.get_global_info import getGlobalInfo
+from .api.views.get_public_game_info import getPublicGameInfo
+from .api.views.get_public_games import getPublicGames
 from .api.views.is_user_authed import isUserAuthed
 from .api.views.manage_categories import ManageCategories
 from .api.views.manage_games import ManageGame
@@ -17,6 +19,8 @@ urlpatterns = [
     path("isUserAuthed", isUserAuthed.as_view(), name="isUserAuthed"),
     path("getGlobalInfo", getGlobalInfo.as_view(), name="getGlobalInfo"),
     path("getGameInfo", getGameInfo.as_view(), name="getGameInfo"),
+    path("getPublicGames", getPublicGames.as_view(), name="getPublicGames"),
+    path("getPublicGameInfo", getPublicGameInfo.as_view(), name="getPublicGameInfo"),
     path("ManageGames", ManageGame.as_view(), name="ManageGames"),
     path("addMap", addMap.as_view(), name="addMap"),
     path("ManageCategories", ManageCategories.as_view(), name="ManageCategories"),

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { apiUrl } from "../api";
 import "./add-game.css";
@@ -239,6 +240,12 @@ export function AddMapWidget({
 
             {useCoordinates && (
               <>
+                <p className="add-game-hint">
+                  Origin X and Y are where in-game (0, 0) sits on the image.{" "}
+                  <Link className="add-game-hint-link" href="/admin/guide">
+                    How to calculate origin and scale
+                  </Link>
+                </p>
                 <div className="add-map-size-row">
                   <div className="add-game-field">
                     <label htmlFor="map-origin-x">Origin X</label>

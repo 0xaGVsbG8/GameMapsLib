@@ -10,7 +10,7 @@ from django.core.files.storage import default_storage
 from django.utils.text import get_valid_filename
 from PIL import Image
 
-from ..models import GameMaps
+from ..models import GameMaps, Games, Items, ItemsCategories, ItemsSubCategories
 
 
 def save_game_icon(game_name, icon):
@@ -167,3 +167,27 @@ def scale_stored_image(image_path, width, height, game_name):
     if new_path != image_path and default_storage.exists(image_path):
         default_storage.delete(image_path)
     return new_path
+
+
+def overview_stats(public_only=False):
+    games = Games.objects.all()
+    maps = GameMaps.objects.all()
+    categories = ItemsCategories.objects.all()
+    subcategories = ItemsSubCategories.objects.all()
+    items = Items.objects.all()
+
+    if public_only:
+        games = games.filter(public=True)
+        maps = maps.filter(GameName__public=True)
+        categories = categories.filter(GameName__public=True)
+        subcategories = subcategories.filter(GameName__public=True)
+        items = items.filter(GameName__public=True)
+
+    return {
+        "games": games.count(),
+        "maps": maps.count(),
+        "categories": categories.count(),
+        "subcategories": subcategories.count(),
+        "items": items.count(),
+        "public_games": Games.objects.filter(public=True).count(),
+    }

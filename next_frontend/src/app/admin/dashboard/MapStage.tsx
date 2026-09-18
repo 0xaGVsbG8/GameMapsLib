@@ -17,9 +17,14 @@ type MapStageProps = {
   mapSrc: string;
   mapNotice: string;
   highlightedMarkerId?: number | null;
-  onMarkerClick: (click: MarkerClick) => void;
-  onMarkerEdit: (marker: MarkerEdit) => void;
+  hiddenCategoryNames?: Set<string>;
+  hiddenSubcategoryKeys?: Set<string>;
+  readOnly?: boolean;
+  onMarkerClick?: (click: MarkerClick) => void;
+  onMarkerEdit?: (marker: MarkerEdit) => void;
 };
+
+const EMPTY_HIDDEN = new Set<string>();
 
 export function MapStage({
   gameInfo,
@@ -27,11 +32,18 @@ export function MapStage({
   mapSrc,
   mapNotice,
   highlightedMarkerId = null,
+  hiddenCategoryNames = EMPTY_HIDDEN,
+  hiddenSubcategoryKeys = EMPTY_HIDDEN,
+  readOnly = false,
   onMarkerClick,
   onMarkerEdit,
 }: MapStageProps) {
   const mapRef = useRef<HTMLImageElement>(null);
   const mapBoardRef = useRef<HTMLDivElement>(null);
+  const mapStageRef = useRef<HTMLDivElement>(null);
+  const infoBoxRef = useRef<HTMLDivElement>(null);
+  const infoMarkerIdRef = useRef<number | null>(null);
+  const syncInfoBoxRef = useRef<() => void>(() => {});
   const coordXRef = useRef<HTMLSpanElement>(null);
   const coordYRef = useRef<HTMLSpanElement>(null);
   const currentImgzoom = useRef(1);
@@ -40,10 +52,12 @@ export function MapStage({
   const lastPointerRef = useRef({ x: 0, y: 0 });
   const [imageLoaded, setImageLoaded] = useState(false);
   const [selectedMarkerId, setSelectedMarkerId] = useState<number | null>(null);
+  const [hoveredMarkerId, setHoveredMarkerId] = useState<number | null>(null);
   const [placedMarkers, setPlacedMarkers] = useState<
     {
       id: number;
       name: string;
+      categoryName: string;
       subcategoryName: string;
       icon_src?: string | null;
       x: number;
@@ -52,6 +66,41 @@ export function MapStage({
       mapY: number;
     }[]
   >([]);
+
+  const visibleMarkers = placedMarkers.filter(
+    (marker) =>
+      !hiddenCategoryNames.has(marker.categoryName) &&
+      !hiddenSubcategoryKeys.has(
+        `${marker.categoryName}::${marker.subcategoryName}`,
+      ),
+  );
+  const infoMarker =
+    visibleMarkers.find((marker) => marker.id === selectedMarkerId) ??
+    visibleMarkers.find((marker) => marker.id === highlightedMarkerId) ??
+    visibleMarkers.find((marker) => marker.id === hoveredMarkerId) ??
+    null;
+  infoMarkerIdRef.current = infoMarker?.id ?? null;
+
+  syncInfoBoxRef.current = () => {
+    const box = infoBoxRef.current;
+    const stage = mapStageRef.current;
+    const id = infoMarkerIdRef.current;
+    if (!box || !stage) return;
+    if (id == null) {
+      box.hidden = true;
+      return;
+    }
+    const marker = stage.querySelector(`[data-marker-id="${id}"]`);
+    if (!(marker instanceof HTMLElement)) {
+      box.hidden = true;
+      return;
+    }
+    const markerRect = marker.getBoundingClientRect();
+    const stageRect = stage.getBoundingClientRect();
+    box.hidden = false;
+    box.style.left = `${markerRect.left + markerRect.width / 2 - stageRect.left}px`;
+    box.style.top = `${markerRect.top - stageRect.top}px`;
+  };
 
   useEffect(() => {
     const image = mapRef.current;
@@ -84,6 +133,7 @@ export function MapStage({
 
     const onContextMenu = (event: MouseEvent) => {
       event.preventDefault();
+      if (readOnly || !onMarkerClick) return;
       if ((event.target as HTMLElement | null)?.closest(".map-marker")) return;
       const point = getMapPoint(event, image, gameInfo);
       if (!point) return;
@@ -99,7 +149,7 @@ export function MapStage({
     return () => {
       image.removeEventListener("contextmenu", onContextMenu);
     };
-  }, [mapSrc, gameInfo, onMarkerClick]);
+  }, [mapSrc, gameInfo, onMarkerClick, readOnly]);
 
   useEffect(() => {
     const board = mapBoardRef.current;
@@ -110,8 +160,12 @@ export function MapStage({
     isTogglingMouse.current = false;
 
     const applyTransform = () => {
-      board.style.setProperty("--map-zoom", String(currentImgzoom.current));
-      board.style.transform = `translate(${panRef.current.x}px, ${panRef.current.y}px) scale(${currentImgzoom.current})`;
+      const zoom = currentImgzoom.current;
+      const iconNet = Math.min(Math.pow(Math.max(zoom, 0.25), 0.2), 1.3);
+      board.style.setProperty("--map-zoom", String(zoom));
+      board.style.setProperty("--map-icon-scale", String(iconNet / zoom));
+      board.style.transform = `translate(${panRef.current.x}px, ${panRef.current.y}px) scale(${zoom})`;
+      syncInfoBoxRef.current();
     };
     applyTransform();
 
@@ -183,9 +237,10 @@ export function MapStage({
   }, [mapSrc]);
 
   useEffect(() => {
-    setImageLoaded(false);
     setPlacedMarkers([]);
     setSelectedMarkerId(null);
+    const image = mapRef.current;
+    setImageLoaded(Boolean(image?.complete && image.naturalWidth));
   }, [mapSrc]);
 
   useEffect(() => {
@@ -205,6 +260,7 @@ export function MapStage({
           return [{
             id: item.id,
             name: item.name,
+            categoryName: item.categoryName,
             subcategoryName: item.subcategoryName,
             icon_src: item.icon_src,
             x: point.x,
@@ -222,8 +278,12 @@ export function MapStage({
     return () => observer.disconnect();
   }, [imageLoaded, gameInfo, mapSrc]);
 
+  useEffect(() => {
+    syncInfoBoxRef.current();
+  });
+
   return (
-    <div className="ide-map-stage">
+    <div className="ide-map-stage" ref={mapStageRef}>
       {mapSrc ? (
         <>
           <div id="map-bor" ref={mapBoardRef}>
@@ -237,9 +297,10 @@ export function MapStage({
               draggable={false}
               onLoad={() => setImageLoaded(true)}
             />
-            {placedMarkers.map((marker) => (
+            {visibleMarkers.map((marker) => (
               <Marker
                 key={marker.id}
+                markerId={marker.id}
                 name={marker.name}
                 subcategoryName={marker.subcategoryName}
                 x={marker.x}
@@ -248,23 +309,37 @@ export function MapStage({
                 highlighted={highlightedMarkerId === marker.id}
                 icon_src={marker.icon_src || undefined}
                 gameName={gameInfo?.game ?? ""}
+                onHover={setHoveredMarkerId}
                 onSelect={() =>
                   setSelectedMarkerId((current) =>
                     current === marker.id ? null : marker.id,
                   )
                 }
-                onEdit={(click) =>
-                  onMarkerEdit({
-                    id: marker.id,
-                    name: marker.name,
-                    x: marker.mapX,
-                    y: marker.mapY,
-                    screenX: click.screenX,
-                    screenY: click.screenY,
-                  })
+                onEdit={
+                  readOnly || !onMarkerEdit
+                    ? undefined
+                    : (click) =>
+                        onMarkerEdit({
+                          id: marker.id,
+                          name: marker.name,
+                          x: marker.mapX,
+                          y: marker.mapY,
+                          screenX: click.screenX,
+                          screenY: click.screenY,
+                        })
                 }
               />
             ))}
+          </div>
+          <div
+            ref={infoBoxRef}
+            className="map-marker-label is-floating"
+            hidden={!infoMarker}
+          >
+            <span className="map-marker-subcategory">
+              {infoMarker?.subcategoryName}
+            </span>
+            <span className="map-marker-name">{infoMarker?.name}</span>
           </div>
           <div className="map-coord-widget">
             <span>

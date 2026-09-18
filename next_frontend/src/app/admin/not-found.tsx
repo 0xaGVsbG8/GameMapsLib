@@ -1,6 +1,14 @@
-'use client'
-import { redirect } from "next/navigation";
+"use client";
 
-export default function NotFound() {
-    redirect("/admin/dashboard");
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+
+export default function AdminNotFound() {
+  const router = useRouter();
+
+  useEffect(() => {
+    router.replace("/admin/dashboard");
+  }, [router]);
+
+  return null;
 }

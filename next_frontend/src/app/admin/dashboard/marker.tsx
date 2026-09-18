@@ -15,11 +15,13 @@ export type Marker_props = {
     highlighted?: boolean
     icon_src?: string
     gameName:string
+    markerId: number
     onSelect: () => void
-    onEdit: (click: MarkerEditClick) => void
+    onHover?: (id: number | null) => void
+    onEdit?: (click: MarkerEditClick) => void
 }
 
-const Marker = ({ name, subcategoryName, x, y, selected, highlighted, icon_src, gameName, onSelect, onEdit }: Marker_props) => {
+const Marker = ({ x, y, selected, highlighted, icon_src, gameName, markerId, onSelect, onHover, onEdit }: Marker_props) => {
     const className = [
         "map-marker",
         selected ? "is-selected" : "",
@@ -30,7 +32,10 @@ const Marker = ({ name, subcategoryName, x, y, selected, highlighted, icon_src, 
     return (
         <div
             className={className}
+            data-marker-id={markerId}
             style={{ left: x, top: y }}
+            onPointerEnter={() => onHover?.(markerId)}
+            onPointerLeave={() => onHover?.(null)}
             onPointerDown={(event) => {
                 if (event.button !== 0) return;
                 event.stopPropagation();
@@ -40,7 +45,7 @@ const Marker = ({ name, subcategoryName, x, y, selected, highlighted, icon_src, 
             onContextMenu={(event) => {
                 event.preventDefault();
                 event.stopPropagation();
-                onEdit({
+                onEdit?.({
                     screenX: event.clientX,
                     screenY: event.clientY,
                 });
@@ -53,10 +58,6 @@ const Marker = ({ name, subcategoryName, x, y, selected, highlighted, icon_src, 
                     alt=""
                 />
             ) : null}
-            <div className="map-marker-label">
-                <span className="map-marker-subcategory">{subcategoryName}</span>
-                <span className="map-marker-name">{name}</span>
-            </div>
         </div>
     )
 }

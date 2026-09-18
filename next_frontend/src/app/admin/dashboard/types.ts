@@ -1,6 +1,16 @@
 
+export type OverviewStats = {
+    games: number
+    maps: number
+    categories: number
+    subcategories: number
+    items: number
+    public_games?: number
+}
+
 export type info_type = {
-    'games': string[]
+    games: string[]
+    stats?: OverviewStats
 }
 
 export type GameMapInfo = {

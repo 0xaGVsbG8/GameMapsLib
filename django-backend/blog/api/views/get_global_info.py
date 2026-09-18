@@ -4,6 +4,7 @@ from rest_framework.views import APIView
 
 from ...authentication import CookieJWTAuthentication
 from ...models import Games
+from ..helpers import overview_stats
 
 
 class getGlobalInfo(APIView):
@@ -11,8 +12,7 @@ class getGlobalInfo(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        games = Games.objects.values_list("name", flat=True)
-        data = {
-            "games": games
-        }
-        return Response(data)
+        return Response({
+            "games": Games.objects.values_list("name", flat=True),
+            "stats": overview_stats(),
+        })
