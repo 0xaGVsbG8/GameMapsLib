@@ -23,7 +23,7 @@ export function GameSidebar({
   return (
     <aside className="ide-sidebar">
       <div className="ide-sidebar-header">
-        <span className="ide-sidebar-title">GAMES</span>
+        <span className="ide-sidebar-title">GAMES/MAPS</span>
         <AddGameWidget compact onAdded={onAdded} />
       </div>
 

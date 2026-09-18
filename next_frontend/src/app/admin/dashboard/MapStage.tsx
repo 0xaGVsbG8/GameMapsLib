@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { MarkerClick } from "./AddMarkerWidget";
+import { MarkerEdit } from "./EditMarkerWidget";
 import { calc_marker, getGameItems, getMapPoint } from "./mapCoords";
 import Marker from "./marker";
 import { GameInfo, GameMapInfo } from "./types";
@@ -15,7 +16,9 @@ type MapStageProps = {
   selectedMap: GameMapInfo | undefined;
   mapSrc: string;
   mapNotice: string;
+  highlightedMarkerId?: number | null;
   onMarkerClick: (click: MarkerClick) => void;
+  onMarkerEdit: (marker: MarkerEdit) => void;
 };
 
 export function MapStage({
@@ -23,7 +26,9 @@ export function MapStage({
   selectedMap,
   mapSrc,
   mapNotice,
+  highlightedMarkerId = null,
   onMarkerClick,
+  onMarkerEdit,
 }: MapStageProps) {
   const mapRef = useRef<HTMLImageElement>(null);
   const mapBoardRef = useRef<HTMLDivElement>(null);
@@ -36,7 +41,16 @@ export function MapStage({
   const [imageLoaded, setImageLoaded] = useState(false);
   const [selectedMarkerId, setSelectedMarkerId] = useState<number | null>(null);
   const [placedMarkers, setPlacedMarkers] = useState<
-    { id: number; name: string; subcategoryName: string; x: number; y: number }[]
+    {
+      id: number;
+      name: string;
+      subcategoryName: string;
+      icon_src?: string | null;
+      x: number;
+      y: number;
+      mapX: number;
+      mapY: number;
+    }[]
   >([]);
 
   useEffect(() => {
@@ -70,6 +84,7 @@ export function MapStage({
 
     const onContextMenu = (event: MouseEvent) => {
       event.preventDefault();
+      if ((event.target as HTMLElement | null)?.closest(".map-marker")) return;
       const point = getMapPoint(event, image, gameInfo);
       if (!point) return;
       onMarkerClick({
@@ -191,8 +206,11 @@ export function MapStage({
             id: item.id,
             name: item.name,
             subcategoryName: item.subcategoryName,
+            icon_src: item.icon_src,
             x: point.x,
             y: point.y,
+            mapX: item.x,
+            mapY: item.y,
           }];
         }),
       );
@@ -227,10 +245,23 @@ export function MapStage({
                 x={marker.x}
                 y={marker.y}
                 selected={selectedMarkerId === marker.id}
+                highlighted={highlightedMarkerId === marker.id}
+                icon_src={marker.icon_src || undefined}
+                gameName={gameInfo?.game ?? ""}
                 onSelect={() =>
                   setSelectedMarkerId((current) =>
                     current === marker.id ? null : marker.id,
                   )
+                }
+                onEdit={(click) =>
+                  onMarkerEdit({
+                    id: marker.id,
+                    name: marker.name,
+                    x: marker.mapX,
+                    y: marker.mapY,
+                    screenX: click.screenX,
+                    screenY: click.screenY,
+                  })
                 }
               />
             ))}

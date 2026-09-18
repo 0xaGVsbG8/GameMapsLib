@@ -1,1035 +1,1164 @@
-import os
-import shutil
-from io import BytesIO
-from pathlib import Path
-
-from django.conf import settings
-from django.core.files.base import ContentFile
-from django.core.files.storage import default_storage
-from django.db import IntegrityError, transaction
-from django.db.models import Prefetch
-from django.http import HttpResponse
-from django.utils.text import get_valid_filename
-from PIL import Image
-from rest_framework.decorators import api_view, authentication_classes, permission_classes
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from django.contrib.auth import authenticate
-from rest_framework import status
-from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework.permissions import IsAuthenticated
-from ..authentication import CookieJWTAuthentication
-from rest_framework_simplejwt.exceptions import InvalidToken
-from ..models import Games, GameMaps, Items, ItemsCategories, ItemsSubCategories
-from .serializers import GameInfoSerializer
-
-@api_view(["GET"])
-def test_api(request):
-    return Response({
-        "message": "Hello from Django API"
-    })
+# #NOT IN USE EVERY SINGLE ENDPOINT IS NOW DEVIDED INTO ITS OWN FILE
 
 
+# import os
+# import shutil
+# from io import BytesIO
+# from pathlib import Path
+# import uuid
+
+# from django.conf import settings
+# from django.core.files.base import ContentFile
+# from django.core.files.storage import default_storage
+# from django.db import IntegrityError, transaction
+# from django.db.models import Prefetch
+# from django.http import HttpResponse
+# from django.utils.text import get_valid_filename
+# from PIL import Image
+# from rest_framework.decorators import api_view, authentication_classes, permission_classes
+# from rest_framework.response import Response
+# from rest_framework.views import APIView
+# from django.contrib.auth import authenticate
+# from rest_framework import status
+# from rest_framework_simplejwt.tokens import RefreshToken
+# from rest_framework.permissions import IsAuthenticated
+# from ..authentication import CookieJWTAuthentication
+# from rest_framework_simplejwt.exceptions import InvalidToken
+# from ..models import Games, GameMaps, Items, ItemsCategories, ItemsSubCategories
+# from .serializers import GameInfoSerializer
+
+# def save_game_icon(game_name, icon):
+#     if not icon:
+#         return None
+#     filename = str(uuid.uuid4()) + ".png"
+#     default_storage.save(f"{game_name}/icons/{filename}", icon)
+#     return filename
+
+# @api_view(["GET"])
+# def test_api(request):
+#     return Response({
+#         "message": "Hello from Django API"
+#     })
 
 
-class AuthUserView(APIView):
 
-    authentication_classes = []
-    permission_classes = []
 
-    def post(self, request):
-        username = request.data.get("username")
-        password = request.data.get("password")
+# class AuthUserView(APIView):
+
+#     authentication_classes = []
+#     permission_classes = []
+
+#     def post(self, request):
+#         username = request.data.get("username")
+#         password = request.data.get("password")
         
-        user = authenticate(
-            username=username,
-            password=password,
-        )
+#         user = authenticate(
+#             username=username,
+#             password=password,
+#         )
         
-        if user is None:
-            return Response(
-                {"message": "Invalid username or password"},
-                status=status.HTTP_401_UNAUTHORIZED,
-            )
+#         if user is None:
+#             return Response(
+#                 {"message": "Invalid username or password"},
+#                 status=status.HTTP_401_UNAUTHORIZED,
+#             )
 
-        if not user.is_staff:
-            return Response(
-                {"message": "You are not an admin"},
-                status=status.HTTP_403_FORBIDDEN,
-            )
+#         if not user.is_staff:
+#             return Response(
+#                 {"message": "You are not an admin"},
+#                 status=status.HTTP_403_FORBIDDEN,
+#             )
             
             
-        refresh = RefreshToken.for_user(user)
+#         refresh = RefreshToken.for_user(user)
         
-        response = Response({
-            "message": "Login successful",
-            "username": user.username,
-        })
+#         response = Response({
+#             "message": "Login successful",
+#             "username": user.username,
+#         })
         
-        response.set_cookie(
-            key="access_token",
-            value=str(refresh.access_token),
-            httponly=True,
-            secure=False,  # True when https
-            samesite="Lax",
-        )
+#         response.set_cookie(
+#             key="access_token",
+#             value=str(refresh.access_token),
+#             httponly=True,
+#             secure=False,  # True when https
+#             samesite="Lax",
+#         )
 
-        response.set_cookie(
-            key="refresh_token", 
-            value=str(refresh),
-            httponly=True,
-            secure=False,
-            samesite="Lax",
-        )
+#         response.set_cookie(
+#             key="refresh_token", 
+#             value=str(refresh),
+#             httponly=True,
+#             secure=False,
+#             samesite="Lax",
+#         )
         
         
-        return response
+#         return response
 
         
     
 
 
-class isUserAuthed(APIView):
-    authentication_classes = [CookieJWTAuthentication]
-    permission_classes = [IsAuthenticated]
+# class isUserAuthed(APIView):
+#     authentication_classes = [CookieJWTAuthentication]
+#     permission_classes = [IsAuthenticated]
 
-    def get(self, request):
-        print('ure authed')
-        return Response({})
+#     def get(self, request):
+#         print('ure authed')
+#         return Response({})
     
     
     
 
 
-class getGlobalInfo(APIView):
-    authentication_classes = [CookieJWTAuthentication]
-    permission_classes = [IsAuthenticated]
+# class getGlobalInfo(APIView):
+#     authentication_classes = [CookieJWTAuthentication]
+#     permission_classes = [IsAuthenticated]
 
-    def get(self, request):
-        games = Games.objects.values_list("name", flat=True)
-        data = {
-            'games': games
-        }
-        return Response(data)
-
-
-class getGameInfo(APIView):
-    authentication_classes = [CookieJWTAuthentication]
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        serializer = GameInfoSerializer(data=request.query_params)
-        serializer.is_valid(raise_exception=True)
-
-        GAMENAME = serializer.validated_data["GameName"]
-        game = (
-            Games.objects.filter(name=GAMENAME)
-            .prefetch_related(
-                "maps",
-                Prefetch(
-                    "item_categories",
-                    queryset=ItemsCategories.objects.prefetch_related(
-                        Prefetch(
-                            "item_subcategories",
-                            queryset=ItemsSubCategories.objects.prefetch_related("Items"),
-                        )
-                    ),
-                ),
-            )
-            .first()
-        )
-        if game is None:
-            return Response(
-                {"message": "Game not found"},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
-        maps = []
-        for entry in game.maps.all():
-            image_path = (entry.image_path or "").strip()
-            maps.append({
-                "Map_name": entry.Map_name,
-                "image_path": image_path,
-                "image_url": request.build_absolute_uri(f"/media/{image_path}") if image_path else "",
-                "width": entry.width,
-                "height": entry.height,
-                "coordinates_feature": entry.coordinates_feature,
-                "origin_x": entry.origin_x,
-                "origin_y": entry.origin_y,
-                "pixels_per_unit": entry.pixels_per_unit,
-            })
-        has_image = any(entry["image_path"] for entry in maps)
-
-        categories = []
-        for category in game.item_categories.all():
-            categories.append({
-                "name": category.CategoryName,
-                "subcategories": [
-                    {
-                        "name": subcategory.SubCategoryName,
-                        "items": [
-                            {
-                                "id": item.id,
-                                "name": item.ItemName,
-                                "x": item.x_location,
-                                "y": item.y_location,
-                            }
-                            for item in subcategory.Items.all()
-                        ],
-                    }
-                    for subcategory in category.item_subcategories.all()
-                ],
-            })
-
-        return Response({
-            "game": GAMENAME,
-            "maps": maps,
-            "categories": categories,
-            "map": "exists" if has_image else "not exists",
-            "public": game.public,
-        })
+#     def get(self, request):
+#         games = Games.objects.values_list("name", flat=True)
+#         data = {
+#             'games': games
+#         }
+#         return Response(data)
 
 
+# class getGameInfo(APIView):
+#     authentication_classes = [CookieJWTAuthentication]
+#     permission_classes = [IsAuthenticated]
+
+#     def get(self, request):
+#         serializer = GameInfoSerializer(data=request.query_params)
+#         serializer.is_valid(raise_exception=True)
+
+#         GAMENAME = serializer.validated_data["GameName"]
+#         game = (
+#             Games.objects.filter(name=GAMENAME)
+#             .prefetch_related(
+#                 "maps",
+#                 Prefetch(
+#                     "item_categories",
+#                     queryset=ItemsCategories.objects.prefetch_related(
+#                         Prefetch(
+#                             "item_subcategories",
+#                             queryset=ItemsSubCategories.objects.prefetch_related("Items"),
+#                         )
+#                     ),
+#                 ),
+#             )
+#             .first()
+#         )
+#         if game is None:
+#             return Response(
+#                 {"message": "Game not found"},
+#                 status=status.HTTP_404_NOT_FOUND,
+#             )
+
+#         maps = []
+#         for entry in game.maps.all():
+#             image_path = (entry.image_path or "").strip()
+#             maps.append({
+#                 "Map_name": entry.Map_name,
+#                 "image_path": image_path,
+#                 "image_url": request.build_absolute_uri(f"/media/{image_path}") if image_path else "",
+#                 "width": entry.width,
+#                 "height": entry.height,
+#                 "coordinates_feature": entry.coordinates_feature,
+#                 "origin_x": entry.origin_x,
+#                 "origin_y": entry.origin_y,
+#                 "pixels_per_unit": entry.pixels_per_unit,
+#             })
+#         has_image = any(entry["image_path"] for entry in maps)
+
+#         categories = []
+#         for category in game.item_categories.all():
+#             categories.append({
+#                 "name": category.CategoryName,
+#                 "subcategories": [
+#                     {
+#                         "name": subcategory.SubCategoryName,
+#                         "default_icon": subcategory.Default_icon,
+#                         "items": [
+#                             {
+#                                 "id": item.id,
+#                                 "name": item.ItemName,
+#                                 "x": item.x_location,
+#                                 "y": item.y_location,
+#                                 "icon": item.icon if item.icon and "." in str(item.icon) else None,
+#                             }
+#                             for item in subcategory.Items.all()
+#                         ],
+#                     }
+#                     for subcategory in category.item_subcategories.all()
+#                 ],
+#             })
+
+#         return Response({
+#             "game": GAMENAME,
+#             "maps": maps,
+#             "categories": categories,
+#             "map": "exists" if has_image else "not exists",
+#             "public": game.public,
+#         })
 
 
 
-class ManageGame(APIView):
-    authentication_classes = [CookieJWTAuthentication]
-    permission_classes = [IsAuthenticated]
 
-    def post(self, request):
-        name = (request.data.get("name") or "").strip()
 
-        if not name:
-            return Response(
-                {"message": "Game name is required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+# class ManageGame(APIView):
+#     authentication_classes = [CookieJWTAuthentication]
+#     permission_classes = [IsAuthenticated]
 
-        try:
-            Games.objects.create(name=name)
-        except IntegrityError:
-            return Response(
-                {"message": "A game with that name already exists"},
-                status=status.HTTP_409_CONFLICT,
-            )
+#     def post(self, request):
+#         name = (request.data.get("name") or "").strip()
 
-        _ensure_game_media(name)
-        return Response({"name": name}, status=status.HTTP_201_CREATED)
+#         if not name:
+#             return Response(
+#                 {"message": "Game name is required"},
+#                 status=status.HTTP_400_BAD_REQUEST,
+#             )
+
+#         try:
+#             Games.objects.create(name=name)
+#         except IntegrityError:
+#             return Response(
+#                 {"message": "A game with that name already exists"},
+#                 status=status.HTTP_409_CONFLICT,
+#             )
+
+#         _ensure_game_media(name)
+#         return Response({"name": name}, status=status.HTTP_201_CREATED)
     
     
-    def delete(self, request):
-        name = (
-            request.data.get("name")
-            or request.query_params.get("name")
-            or ""
-        ).strip()
-
-        if not name:
-            return Response(
-                {"message": "Game name is required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        deleted, _ = Games.objects.filter(name=name).delete()
-        if not deleted:
-            return Response(
-                {"message": "Game not found"},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
-        _delete_game_media(name)
-        return Response({"name": name}, status=status.HTTP_200_OK)
-
-    def patch(self, request):
-        name = (request.data.get("name") or "").strip()
-        new_name = (request.data.get("newName") or "").strip()
-        has_public = "public" in request.data
-
-        if not name:
-            return Response(
-                {"message": "Game name is required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        game = Games.objects.filter(name=name).first()
-        if game is None:
-            return Response(
-                {"message": "Game not found"},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
-        if has_public and not new_name:
-            game.public = _parse_bool(request.data.get("public"))
-            game.save(update_fields=["public"])
-            return Response({"name": game.name, "public": game.public})
-
-        if not new_name:
-            return Response(
-                {"message": "Current name and new name are required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        if name == new_name:
-            return Response({
-                "name": new_name,
-                "oldName": name,
-                "public": game.public,
-            })
-
-        if Games.objects.filter(name=new_name).exists():
-            return Response(
-                {"message": "A game with that name already exists"},
-                status=status.HTTP_409_CONFLICT,
-            )
-
-        public_value = (
-            _parse_bool(request.data.get("public")) if has_public else game.public
-        )
-
-        with transaction.atomic():
-            renamed = Games.objects.create(name=new_name, public=public_value)
-            GameMaps.objects.filter(GameName=game).update(GameName=renamed)
-            ItemsCategories.objects.filter(GameName=game).update(GameName=renamed)
-            ItemsSubCategories.objects.filter(GameName=game).update(GameName=renamed)
-            Items.objects.filter(GameName=game).update(GameName=renamed)
-            game.delete()
-
-        _rename_game_media(name, new_name)
-
-        return Response({
-            "name": new_name,
-            "oldName": name,
-            "public": public_value,
-        })
-
-
-def _parse_bool(value):
-    if isinstance(value, bool):
-        return value
-    return str(value or "").strip().lower() in ("true", "1", "on", "yes")
-
-
-def _game_folder(game_name):
-    folder = get_valid_filename((game_name or "").strip())
-    return folder or "game"
-
-
-def _game_maps_prefix(game_name):
-    return f"{_game_folder(game_name)}/maps"
-
-
-def _ensure_game_media(game_name):
-    maps_dir = Path(settings.MEDIA_ROOT) / _game_folder(game_name) / "maps"
-    maps_dir.mkdir(parents=True, exist_ok=True)
-    return _game_maps_prefix(game_name)
-
-
-def _delete_game_media(game_name):
-    folder = Path(settings.MEDIA_ROOT) / _game_folder(game_name)
-    if folder.is_dir():
-        shutil.rmtree(folder)
-
-
-def _rename_game_media(old_name, new_name):
-    old_folder = Path(settings.MEDIA_ROOT) / _game_folder(old_name)
-    new_folder = Path(settings.MEDIA_ROOT) / _game_folder(new_name)
-    if old_folder.is_dir() and old_folder.resolve() != new_folder.resolve():
-        if new_folder.exists():
-            shutil.rmtree(new_folder)
-        new_folder.parent.mkdir(parents=True, exist_ok=True)
-        old_folder.rename(new_folder)
-
-    old_prefix = f"{_game_folder(old_name)}/"
-    new_prefix = f"{_game_folder(new_name)}/"
-    maps_prefix = f"{_game_maps_prefix(new_name)}/"
-    _ensure_game_media(new_name)
-
-    for game_map in GameMaps.objects.filter(GameName_id=new_name):
-        path = (game_map.image_path or "").strip()
-        if not path:
-            continue
-        if path.startswith(old_prefix):
-            game_map.image_path = new_prefix + path[len(old_prefix):]
-            game_map.save(update_fields=["image_path"])
-            continue
-        if path.startswith("maps/") and not path.startswith(maps_prefix):
-            filename = os.path.basename(path)
-            new_path = f"{_game_maps_prefix(new_name)}/{filename}"
-            old_file = Path(settings.MEDIA_ROOT) / path
-            new_file = Path(settings.MEDIA_ROOT) / new_path
-            new_file.parent.mkdir(parents=True, exist_ok=True)
-            if old_file.exists() and old_file.resolve() != new_file.resolve():
-                shutil.move(str(old_file), str(new_file))
-            game_map.image_path = new_path
-            game_map.save(update_fields=["image_path"])
-
-
-def _parse_coordinate_fields(data):
-    use_coords = _parse_bool(data.get("coordinatesFeature"))
-    if not use_coords:
-        return False, None, None, None, None
-
-    try:
-        origin_x = float(data.get("originX"))
-        origin_y = float(data.get("originY"))
-        pixels_per_unit = float(data.get("pixelsPerUnit"))
-    except (TypeError, ValueError):
-        return True, None, None, None, "Origin X, origin Y, and pixels per unit are required"
-
-    if pixels_per_unit <= 0:
-        return True, None, None, None, "Pixels per unit must be positive"
-
-    return True, origin_x, origin_y, pixels_per_unit, None
-
-
-def _image_format_and_name(image, filename):
-    fmt = (image.format or "").upper()
-    if fmt == "JPG":
-        fmt = "JPEG"
-    ext = os.path.splitext(filename)[1].lower()
-    if fmt not in ("PNG", "JPEG", "WEBP", "GIF"):
-        fmt = {
-            ".jpg": "JPEG",
-            ".jpeg": "JPEG",
-            ".png": "PNG",
-            ".webp": "WEBP",
-            ".gif": "GIF",
-        }.get(ext, "PNG")
-    ext_map = {"PNG": ".png", "JPEG": ".jpg", "WEBP": ".webp", "GIF": ".gif"}
-    root = os.path.splitext(get_valid_filename(filename))[0]
-    return fmt, f"{root}{ext_map.get(fmt, ext or '.png')}"
-
-
-def _save_image_to_size(source, filename, width, height, game_name):
-    source.seek(0)
-    image = Image.open(source)
-    image.load()
-    fmt, name = _image_format_and_name(image, filename)
-    if image.size != (width, height):
-        image = image.resize((width, height), Image.Resampling.LANCZOS)
-    if fmt == "JPEG" and image.mode in ("RGBA", "P", "LA"):
-        image = image.convert("RGB")
-    buffer = BytesIO()
-    save_kwargs = {"format": fmt}
-    if fmt == "JPEG":
-        save_kwargs["quality"] = 90
-        save_kwargs["optimize"] = True
-    image.save(buffer, **save_kwargs)
-    buffer.seek(0)
-    dest = f"{_game_maps_prefix(game_name)}/{name}"
-    return default_storage.save(dest, ContentFile(buffer.read(), name=name))
-
-
-def _store_uploaded_image(uploaded, width, height, game_name):
-    _ensure_game_media(game_name)
-    uploaded.seek(0)
-    image = Image.open(uploaded)
-    image.load()
-    filename = uploaded.name
-    if image.size == (width, height):
-        uploaded.seek(0)
-        dest = f"{_game_maps_prefix(game_name)}/{get_valid_filename(filename)}"
-        return default_storage.save(dest, uploaded)
-    return _save_image_to_size(uploaded, filename, width, height, game_name)
-
-
-def _scale_stored_image(image_path, width, height, game_name):
-    if not image_path or not default_storage.exists(image_path):
-        return image_path
-    with default_storage.open(image_path, "rb") as fh:
-        original = BytesIO(fh.read())
-    original.seek(0)
-    with Image.open(original) as image:
-        current_size = image.size
-        filename = os.path.basename(image_path)
-    if current_size == (width, height):
-        return image_path
-    original.seek(0)
-    new_path = _save_image_to_size(original, filename, width, height, game_name)
-    if new_path != image_path and default_storage.exists(image_path):
-        default_storage.delete(image_path)
-    return new_path
-
-
-class addMap(APIView):
-    authentication_classes = [CookieJWTAuthentication]
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request):
-        game_name = (request.data.get("gameName") or "").strip()
-        map_name = (request.data.get("name") or "").strip()
-        width_raw = request.data.get("width")
-        height_raw = request.data.get("height")
-        image = request.FILES.get("image")
-
-        if not game_name:
-            return Response(
-                {"message": "Game name is required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        if not map_name:
-            return Response(
-                {"message": "Map name is required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        try:
-            width = int(width_raw)
-            height = int(height_raw)
-        except (TypeError, ValueError):
-            return Response(
-                {"message": "Width and height are required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        if width <= 0 or height <= 0:
-            return Response(
-                {"message": "Width and height must be positive"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        use_coords, origin_x, origin_y, pixels_per_unit, coord_error = (
-            _parse_coordinate_fields(request.data)
-        )
-        if coord_error:
-            return Response(
-                {"message": coord_error},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        coord_kwargs = {
-            "coordinates_feature": use_coords,
-            "origin_x": origin_x,
-            "origin_y": origin_y,
-            "pixels_per_unit": pixels_per_unit,
-        }
-
-        game = Games.objects.filter(name=game_name).first()
-        if game is None:
-            return Response(
-                {"message": "Game not found"},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
-        existing = game.maps.first()
-        if existing is not None:
-            image_path = existing.image_path
-            if image:
-                if image_path and default_storage.exists(image_path):
-                    default_storage.delete(image_path)
-                image_path = _store_uploaded_image(image, width, height, game_name)
-            else:
-                image_path = _scale_stored_image(image_path, width, height, game_name)
-
-            if map_name != existing.Map_name:
-                if GameMaps.objects.filter(Map_name=map_name).exists():
-                    return Response(
-                        {"message": "A map with that name already exists"},
-                        status=status.HTTP_409_CONFLICT,
-                    )
-                GameMaps.objects.create(
-                    Map_name=map_name,
-                    GameName=game,
-                    image_path=image_path,
-                    width=width,
-                    height=height,
-                    **coord_kwargs,
-                )
-                existing.delete()
-            else:
-                existing.image_path = image_path
-                existing.width = width
-                existing.height = height
-                existing.coordinates_feature = use_coords
-                existing.origin_x = origin_x
-                existing.origin_y = origin_y
-                existing.pixels_per_unit = pixels_per_unit
-                existing.save()
-
-            return Response(
-                {
-                    "name": map_name,
-                    "image_path": image_path,
-                    "width": width,
-                    "height": height,
-                    "replaced": True,
-                    **coord_kwargs,
-                }
-            )
-
-        image_path = _store_uploaded_image(image, width, height, game_name) if image else ""
-
-        try:
-            GameMaps.objects.create(
-                Map_name=map_name,
-                GameName=game,
-                image_path=image_path,
-                width=width,
-                height=height,
-                **coord_kwargs,
-            )
-        except IntegrityError:
-            return Response(
-                {"message": "A map with that name already exists"},
-                status=status.HTTP_409_CONFLICT,
-            )
-
-        return Response(
-            {
-                "name": map_name,
-                "image_path": image_path,
-                "width": width,
-                "height": height,
-                "replaced": False,
-                **coord_kwargs,
-            },
-            status=status.HTTP_201_CREATED,
-        )
-
-
-class ManageCategories(APIView):
-    authentication_classes = [CookieJWTAuthentication]
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request):
-        game_name = (request.data.get("gameName") or "").strip()
-        name = (request.data.get("name") or "").strip()
-
-        if not game_name:
-            return Response(
-                {"message": "Game name is required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        if not name:
-            return Response(
-                {"message": "Category name is required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        game = Games.objects.filter(name=game_name).first()
-        if game is None:
-            return Response(
-                {"message": "Game not found"},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
-        try:
-            ItemsCategories.objects.create(CategoryName=name, GameName=game)
-        except IntegrityError:
-            return Response(
-                {"message": "A category with that name already exists"},
-                status=status.HTTP_409_CONFLICT,
-            )
-
-        return Response({"name": name}, status=status.HTTP_201_CREATED)
-
-    def patch(self, request):
-        game_name = (request.data.get("gameName") or "").strip()
-        name = (request.data.get("name") or "").strip()
-        new_name = (request.data.get("newName") or "").strip()
-
-        if not game_name:
-            return Response(
-                {"message": "Game name is required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        if not name or not new_name:
-            return Response(
-                {"message": "Current name and new name are required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        game = Games.objects.filter(name=game_name).first()
-        if game is None:
-            return Response(
-                {"message": "Game not found"},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
-        category = ItemsCategories.objects.filter(
-            GameName=game,
-            CategoryName=name,
-        ).first()
-        if category is None:
-            return Response(
-                {"message": "Category not found"},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
-        if name == new_name:
-            return Response({"name": new_name})
-
-        category.CategoryName = new_name
-        try:
-            category.save()
-        except IntegrityError:
-            return Response(
-                {"message": "A category with that name already exists"},
-                status=status.HTTP_409_CONFLICT,
-            )
-
-        return Response({"name": new_name, "oldName": name})
-
-    def delete(self, request):
-        game_name = (
-            request.data.get("gameName")
-            or request.query_params.get("gameName")
-            or ""
-        ).strip()
-        name = (
-            request.data.get("name")
-            or request.query_params.get("name")
-            or ""
-        ).strip()
-
-        if not game_name:
-            return Response(
-                {"message": "Game name is required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        if not name:
-            return Response(
-                {"message": "Category name is required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        game = Games.objects.filter(name=game_name).first()
-        if game is None:
-            return Response(
-                {"message": "Game not found"},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
-        deleted, _ = ItemsCategories.objects.filter(
-            GameName=game,
-            CategoryName=name,
-        ).delete()
-        if not deleted:
-            return Response(
-                {"message": "Category not found"},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
-        return Response({"name": name}, status=status.HTTP_200_OK)
-
-
-class ManageSubCategories(APIView):
-    authentication_classes = [CookieJWTAuthentication]
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request):
-        game_name = (request.data.get("gameName") or "").strip()
-        category_name = (request.data.get("categoryName") or "").strip()
-        name = (request.data.get("name") or "").strip()
-
-        if not game_name:
-            return Response(
-                {"message": "Game name is required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        if not category_name:
-            return Response(
-                {"message": "Category name is required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        if not name:
-            return Response(
-                {"message": "Subcategory name is required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        game = Games.objects.filter(name=game_name).first()
-        if game is None:
-            return Response(
-                {"message": "Game not found"},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
-        category = ItemsCategories.objects.filter(
-            GameName=game,
-            CategoryName=category_name,
-        ).first()
-        if category is None:
-            return Response(
-                {"message": "Category not found"},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
-        try:
-            ItemsSubCategories.objects.create(
-                SubCategoryName=name,
-                PrimalCategory=category,
-                GameName=game,
-            )
-        except IntegrityError:
-            return Response(
-                {"message": "A subcategory with that name already exists"},
-                status=status.HTTP_409_CONFLICT,
-            )
-
-        return Response(
-            {"name": name, "categoryName": category_name},
-            status=status.HTTP_201_CREATED,
-        )
-
-    def patch(self, request):
-        game_name = (request.data.get("gameName") or "").strip()
-        category_name = (request.data.get("categoryName") or "").strip()
-        name = (request.data.get("name") or "").strip()
-        new_name = (request.data.get("newName") or "").strip()
-
-        if not game_name:
-            return Response(
-                {"message": "Game name is required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        if not category_name:
-            return Response(
-                {"message": "Category name is required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        if not name or not new_name:
-            return Response(
-                {"message": "Current name and new name are required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        game = Games.objects.filter(name=game_name).first()
-        if game is None:
-            return Response(
-                {"message": "Game not found"},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
-        category = ItemsCategories.objects.filter(
-            GameName=game,
-            CategoryName=category_name,
-        ).first()
-        if category is None:
-            return Response(
-                {"message": "Category not found"},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
-        subcategory = ItemsSubCategories.objects.filter(
-            GameName=game,
-            PrimalCategory=category,
-            SubCategoryName=name,
-        ).first()
-        if subcategory is None:
-            return Response(
-                {"message": "Subcategory not found"},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
-        if name == new_name:
-            return Response({"name": new_name, "categoryName": category_name})
-
-        subcategory.SubCategoryName = new_name
-        try:
-            subcategory.save()
-        except IntegrityError:
-            return Response(
-                {"message": "A subcategory with that name already exists"},
-                status=status.HTTP_409_CONFLICT,
-            )
-
-        return Response(
-            {"name": new_name, "oldName": name, "categoryName": category_name}
-        )
-
-    def delete(self, request):
-        game_name = (
-            request.data.get("gameName")
-            or request.query_params.get("gameName")
-            or ""
-        ).strip()
-        category_name = (
-            request.data.get("categoryName")
-            or request.query_params.get("categoryName")
-            or ""
-        ).strip()
-        name = (
-            request.data.get("name")
-            or request.query_params.get("name")
-            or ""
-        ).strip()
-
-        if not game_name:
-            return Response(
-                {"message": "Game name is required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        if not category_name:
-            return Response(
-                {"message": "Category name is required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        if not name:
-            return Response(
-                {"message": "Subcategory name is required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        game = Games.objects.filter(name=game_name).first()
-        if game is None:
-            return Response(
-                {"message": "Game not found"},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
-        category = ItemsCategories.objects.filter(
-            GameName=game,
-            CategoryName=category_name,
-        ).first()
-        if category is None:
-            return Response(
-                {"message": "Category not found"},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
-        deleted, _ = ItemsSubCategories.objects.filter(
-            GameName=game,
-            PrimalCategory=category,
-            SubCategoryName=name,
-        ).delete()
-        if not deleted:
-            return Response(
-                {"message": "Subcategory not found"},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
-        return Response(
-            {"name": name, "categoryName": category_name},
-            status=status.HTTP_200_OK,
-        )
-
-
-class ManageItems(APIView):
-    authentication_classes = [CookieJWTAuthentication]
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request):
-        game_name = (request.data.get("gameName") or "").strip()
-        name = (request.data.get("name") or "").strip()
-        category_name = (request.data.get("categoryName") or "").strip()
-        subcategory_name = (request.data.get("subcategoryName") or "").strip()
-
-        if not game_name:
-            return Response(
-                {"message": "Game name is required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        if not name:
-            return Response(
-                {"message": "Marker name is required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        if not category_name or not subcategory_name:
-            return Response(
-                {"message": "Category and subcategory are required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        try:
-            x_location = int(round(float(request.data.get("x"))))
-            y_location = int(round(float(request.data.get("y"))))
-        except (TypeError, ValueError):
-            return Response(
-                {"message": "X and Y are required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        game = Games.objects.filter(name=game_name).first()
-        if game is None:
-            return Response(
-                {"message": "Game not found"},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
-        category = ItemsCategories.objects.filter(
-            GameName=game,
-            CategoryName=category_name,
-        ).first()
-        if category is None:
-            return Response(
-                {"message": "Category not found"},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
-        subcategory = ItemsSubCategories.objects.filter(
-            GameName=game,
-            PrimalCategory=category,
-            SubCategoryName=subcategory_name,
-        ).first()
-        if subcategory is None:
-            return Response(
-                {"message": "Subcategory not found"},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
-        item = Items.objects.create(
-            ItemName=name,
-            GameName=game,
-            CategoryName=category,
-            SubCategoryName=subcategory,
-            x_location=x_location,
-            y_location=y_location,
-        )
-
-        return Response(
-            {
-                "name": item.ItemName,
-                "x": item.x_location,
-                "y": item.y_location,
-                "categoryName": category_name,
-                "subcategoryName": subcategory_name,
-            },
-            status=status.HTTP_201_CREATED,
-        )
-
-    def delete(self, request):
-        game_name = (
-            request.data.get("gameName")
-            or request.query_params.get("gameName")
-            or ""
-        ).strip()
-        item_id = request.data.get("id") or request.query_params.get("id")
-
-        if not game_name:
-            return Response(
-                {"message": "Game name is required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        try:
-            item_id = int(item_id)
-        except (TypeError, ValueError):
-            return Response(
-                {"message": "Item id is required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        game = Games.objects.filter(name=game_name).first()
-        if game is None:
-            return Response(
-                {"message": "Game not found"},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
-        deleted, _ = Items.objects.filter(id=item_id, GameName=game).delete()
-        if not deleted:
-            return Response(
-                {"message": "Item not found"},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
-        return Response({"id": item_id}, status=status.HTTP_200_OK)
+#     def delete(self, request):
+#         name = (
+#             request.data.get("name")
+#             or request.query_params.get("name")
+#             or ""
+#         ).strip()
+
+#         if not name:
+#             return Response(
+#                 {"message": "Game name is required"},
+#                 status=status.HTTP_400_BAD_REQUEST,
+#             )
+
+#         deleted, _ = Games.objects.filter(name=name).delete()
+#         if not deleted:
+#             return Response(
+#                 {"message": "Game not found"},
+#                 status=status.HTTP_404_NOT_FOUND,
+#             )
+
+#         _delete_game_media(name)
+#         return Response({"name": name}, status=status.HTTP_200_OK)
+
+#     def patch(self, request):
+#         name = (request.data.get("name") or "").strip()
+#         new_name = (request.data.get("newName") or "").strip()
+#         has_public = "public" in request.data
+
+#         if not name:
+#             return Response(
+#                 {"message": "Game name is required"},
+#                 status=status.HTTP_400_BAD_REQUEST,
+#             )
+
+#         game = Games.objects.filter(name=name).first()
+#         if game is None:
+#             return Response(
+#                 {"message": "Game not found"},
+#                 status=status.HTTP_404_NOT_FOUND,
+#             )
+
+#         if has_public and not new_name:
+#             game.public = _parse_bool(request.data.get("public"))
+#             game.save(update_fields=["public"])
+#             return Response({"name": game.name, "public": game.public})
+
+#         if not new_name:
+#             return Response(
+#                 {"message": "Current name and new name are required"},
+#                 status=status.HTTP_400_BAD_REQUEST,
+#             )
+
+#         if name == new_name:
+#             return Response({
+#                 "name": new_name,
+#                 "oldName": name,
+#                 "public": game.public,
+#             })
+
+#         if Games.objects.filter(name=new_name).exists():
+#             return Response(
+#                 {"message": "A game with that name already exists"},
+#                 status=status.HTTP_409_CONFLICT,
+#             )
+
+#         public_value = (
+#             _parse_bool(request.data.get("public")) if has_public else game.public
+#         )
+
+#         with transaction.atomic():
+#             renamed = Games.objects.create(name=new_name, public=public_value)
+#             GameMaps.objects.filter(GameName=game).update(GameName=renamed)
+#             ItemsCategories.objects.filter(GameName=game).update(GameName=renamed)
+#             ItemsSubCategories.objects.filter(GameName=game).update(GameName=renamed)
+#             Items.objects.filter(GameName=game).update(GameName=renamed)
+#             game.delete()
+
+#         _rename_game_media(name, new_name)
+
+#         return Response({
+#             "name": new_name,
+#             "oldName": name,
+#             "public": public_value,
+#         })
+
+
+# def _parse_bool(value):
+#     if isinstance(value, bool):
+#         return value
+#     return str(value or "").strip().lower() in ("true", "1", "on", "yes")
+
+
+# def _game_folder(game_name):
+#     folder = get_valid_filename((game_name or "").strip())
+#     return folder or "game"
+
+
+# def _game_maps_prefix(game_name):
+#     return f"{_game_folder(game_name)}/maps"
+
+
+# def _ensure_game_media(game_name):
+#     maps_dir = Path(settings.MEDIA_ROOT) / _game_folder(game_name) / "maps"
+#     maps_dir.mkdir(parents=True, exist_ok=True)
+#     return _game_maps_prefix(game_name)
+
+
+# def _delete_game_media(game_name):
+#     folder = Path(settings.MEDIA_ROOT) / _game_folder(game_name)
+#     if folder.is_dir():
+#         shutil.rmtree(folder)
+
+
+# def _rename_game_media(old_name, new_name):
+#     old_folder = Path(settings.MEDIA_ROOT) / _game_folder(old_name)
+#     new_folder = Path(settings.MEDIA_ROOT) / _game_folder(new_name)
+#     if old_folder.is_dir() and old_folder.resolve() != new_folder.resolve():
+#         if new_folder.exists():
+#             shutil.rmtree(new_folder)
+#         new_folder.parent.mkdir(parents=True, exist_ok=True)
+#         old_folder.rename(new_folder)
+
+#     old_prefix = f"{_game_folder(old_name)}/"
+#     new_prefix = f"{_game_folder(new_name)}/"
+#     maps_prefix = f"{_game_maps_prefix(new_name)}/"
+#     _ensure_game_media(new_name)
+
+#     for game_map in GameMaps.objects.filter(GameName_id=new_name):
+#         path = (game_map.image_path or "").strip()
+#         if not path:
+#             continue
+#         if path.startswith(old_prefix):
+#             game_map.image_path = new_prefix + path[len(old_prefix):]
+#             game_map.save(update_fields=["image_path"])
+#             continue
+#         if path.startswith("maps/") and not path.startswith(maps_prefix):
+#             filename = os.path.basename(path)
+#             new_path = f"{_game_maps_prefix(new_name)}/{filename}"
+#             old_file = Path(settings.MEDIA_ROOT) / path
+#             new_file = Path(settings.MEDIA_ROOT) / new_path
+#             new_file.parent.mkdir(parents=True, exist_ok=True)
+#             if old_file.exists() and old_file.resolve() != new_file.resolve():
+#                 shutil.move(str(old_file), str(new_file))
+#             game_map.image_path = new_path
+#             game_map.save(update_fields=["image_path"])
+
+
+# def _parse_coordinate_fields(data):
+#     use_coords = _parse_bool(data.get("coordinatesFeature"))
+#     if not use_coords:
+#         return False, None, None, None, None
+
+#     try:
+#         origin_x = float(data.get("originX"))
+#         origin_y = float(data.get("originY"))
+#         pixels_per_unit = float(data.get("pixelsPerUnit"))
+#     except (TypeError, ValueError):
+#         return True, None, None, None, "Origin X, origin Y, and pixels per unit are required"
+
+#     if pixels_per_unit <= 0:
+#         return True, None, None, None, "Pixels per unit must be positive"
+
+#     return True, origin_x, origin_y, pixels_per_unit, None
+
+
+# def _image_format_and_name(image, filename):
+#     fmt = (image.format or "").upper()
+#     if fmt == "JPG":
+#         fmt = "JPEG"
+#     ext = os.path.splitext(filename)[1].lower()
+#     if fmt not in ("PNG", "JPEG", "WEBP", "GIF"):
+#         fmt = {
+#             ".jpg": "JPEG",
+#             ".jpeg": "JPEG",
+#             ".png": "PNG",
+#             ".webp": "WEBP",
+#             ".gif": "GIF",
+#         }.get(ext, "PNG")
+#     ext_map = {"PNG": ".png", "JPEG": ".jpg", "WEBP": ".webp", "GIF": ".gif"}
+#     root = os.path.splitext(get_valid_filename(filename))[0]
+#     return fmt, f"{root}{ext_map.get(fmt, ext or '.png')}"
+
+
+# def _save_image_to_size(source, filename, width, height, game_name):
+#     source.seek(0)
+#     image = Image.open(source)
+#     image.load()
+#     fmt, name = _image_format_and_name(image, filename)
+#     if image.size != (width, height):
+#         image = image.resize((width, height), Image.Resampling.LANCZOS)
+#     if fmt == "JPEG" and image.mode in ("RGBA", "P", "LA"):
+#         image = image.convert("RGB")
+#     buffer = BytesIO()
+#     save_kwargs = {"format": fmt}
+#     if fmt == "JPEG":
+#         save_kwargs["quality"] = 90
+#         save_kwargs["optimize"] = True
+#     image.save(buffer, **save_kwargs)
+#     buffer.seek(0)
+#     dest = f"{_game_maps_prefix(game_name)}/{name}"
+#     return default_storage.save(dest, ContentFile(buffer.read(), name=name))
+
+
+# def _store_uploaded_image(uploaded, width, height, game_name):
+#     _ensure_game_media(game_name)
+#     uploaded.seek(0)
+#     image = Image.open(uploaded)
+#     image.load()
+#     filename = uploaded.name
+#     if image.size == (width, height):
+#         uploaded.seek(0)
+#         dest = f"{_game_maps_prefix(game_name)}/{get_valid_filename(filename)}"
+#         return default_storage.save(dest, uploaded)
+#     return _save_image_to_size(uploaded, filename, width, height, game_name)
+
+
+# def _scale_stored_image(image_path, width, height, game_name):
+#     if not image_path or not default_storage.exists(image_path):
+#         return image_path
+#     with default_storage.open(image_path, "rb") as fh:
+#         original = BytesIO(fh.read())
+#     original.seek(0)
+#     with Image.open(original) as image:
+#         current_size = image.size
+#         filename = os.path.basename(image_path)
+#     if current_size == (width, height):
+#         return image_path
+#     original.seek(0)
+#     new_path = _save_image_to_size(original, filename, width, height, game_name)
+#     if new_path != image_path and default_storage.exists(image_path):
+#         default_storage.delete(image_path)
+#     return new_path
+
+
+# class addMap(APIView):
+#     authentication_classes = [CookieJWTAuthentication]
+#     permission_classes = [IsAuthenticated]
+
+#     def post(self, request):
+#         game_name = (request.data.get("gameName") or "").strip()
+#         map_name = (request.data.get("name") or "").strip()
+#         width_raw = request.data.get("width")
+#         height_raw = request.data.get("height")
+#         image = request.FILES.get("image")
+
+#         if not game_name:
+#             return Response(
+#                 {"message": "Game name is required"},
+#                 status=status.HTTP_400_BAD_REQUEST,
+#             )
+
+#         if not map_name:
+#             return Response(
+#                 {"message": "Map name is required"},
+#                 status=status.HTTP_400_BAD_REQUEST,
+#             )
+
+#         try:
+#             width = int(width_raw)
+#             height = int(height_raw)
+#         except (TypeError, ValueError):
+#             return Response(
+#                 {"message": "Width and height are required"},
+#                 status=status.HTTP_400_BAD_REQUEST,
+#             )
+
+#         if width <= 0 or height <= 0:
+#             return Response(
+#                 {"message": "Width and height must be positive"},
+#                 status=status.HTTP_400_BAD_REQUEST,
+#             )
+
+#         use_coords, origin_x, origin_y, pixels_per_unit, coord_error = (
+#             _parse_coordinate_fields(request.data)
+#         )
+#         if coord_error:
+#             return Response(
+#                 {"message": coord_error},
+#                 status=status.HTTP_400_BAD_REQUEST,
+#             )
+
+#         coord_kwargs = {
+#             "coordinates_feature": use_coords,
+#             "origin_x": origin_x,
+#             "origin_y": origin_y,
+#             "pixels_per_unit": pixels_per_unit,
+#         }
+
+#         game = Games.objects.filter(name=game_name).first()
+#         if game is None:
+#             return Response(
+#                 {"message": "Game not found"},
+#                 status=status.HTTP_404_NOT_FOUND,
+#             )
+
+#         existing = game.maps.first()
+#         if existing is not None:
+#             image_path = existing.image_path
+#             if image:
+#                 if image_path and default_storage.exists(image_path):
+#                     default_storage.delete(image_path)
+#                 image_path = _store_uploaded_image(image, width, height, game_name)
+#             else:
+#                 image_path = _scale_stored_image(image_path, width, height, game_name)
+
+#             if map_name != existing.Map_name:
+#                 if GameMaps.objects.filter(Map_name=map_name).exists():
+#                     return Response(
+#                         {"message": "A map with that name already exists"},
+#                         status=status.HTTP_409_CONFLICT,
+#                     )
+#                 GameMaps.objects.create(
+#                     Map_name=map_name,
+#                     GameName=game,
+#                     image_path=image_path,
+#                     width=width,
+#                     height=height,
+#                     **coord_kwargs,
+#                 )
+#                 existing.delete()
+#             else:
+#                 existing.image_path = image_path
+#                 existing.width = width
+#                 existing.height = height
+#                 existing.coordinates_feature = use_coords
+#                 existing.origin_x = origin_x
+#                 existing.origin_y = origin_y
+#                 existing.pixels_per_unit = pixels_per_unit
+#                 existing.save()
+
+#             return Response(
+#                 {
+#                     "name": map_name,
+#                     "image_path": image_path,
+#                     "width": width,
+#                     "height": height,
+#                     "replaced": True,
+#                     **coord_kwargs,
+#                 }
+#             )
+
+#         image_path = _store_uploaded_image(image, width, height, game_name) if image else ""
+
+#         try:
+#             GameMaps.objects.create(
+#                 Map_name=map_name,
+#                 GameName=game,
+#                 image_path=image_path,
+#                 width=width,
+#                 height=height,
+#                 **coord_kwargs,
+#             )
+#         except IntegrityError:
+#             return Response(
+#                 {"message": "A map with that name already exists"},
+#                 status=status.HTTP_409_CONFLICT,
+#             )
+
+#         return Response(
+#             {
+#                 "name": map_name,
+#                 "image_path": image_path,
+#                 "width": width,
+#                 "height": height,
+#                 "replaced": False,
+#                 **coord_kwargs,
+#             },
+#             status=status.HTTP_201_CREATED,
+#         )
+
+
+# class ManageCategories(APIView):
+#     authentication_classes = [CookieJWTAuthentication]
+#     permission_classes = [IsAuthenticated]
+
+#     def post(self, request):
+#         game_name = (request.data.get("gameName") or "").strip()
+#         name = (request.data.get("name") or "").strip()
+
+#         if not game_name:
+#             return Response(
+#                 {"message": "Game name is required"},
+#                 status=status.HTTP_400_BAD_REQUEST,
+#             )
+
+#         if not name:
+#             return Response(
+#                 {"message": "Category name is required"},
+#                 status=status.HTTP_400_BAD_REQUEST,
+#             )
+
+#         game = Games.objects.filter(name=game_name).first()
+#         if game is None:
+#             return Response(
+#                 {"message": "Game not found"},
+#                 status=status.HTTP_404_NOT_FOUND,
+#             )
+
+#         try:
+#             ItemsCategories.objects.create(CategoryName=name, GameName=game)
+#         except IntegrityError:
+#             return Response(
+#                 {"message": "A category with that name already exists"},
+#                 status=status.HTTP_409_CONFLICT,
+#             )
+
+#         return Response({"name": name}, status=status.HTTP_201_CREATED)
+
+#     def patch(self, request):
+#         game_name = (request.data.get("gameName") or "").strip()
+#         name = (request.data.get("name") or "").strip()
+#         new_name = (request.data.get("newName") or "").strip()
+
+#         if not game_name:
+#             return Response(
+#                 {"message": "Game name is required"},
+#                 status=status.HTTP_400_BAD_REQUEST,
+#             )
+
+#         if not name or not new_name:
+#             return Response(
+#                 {"message": "Current name and new name are required"},
+#                 status=status.HTTP_400_BAD_REQUEST,
+#             )
+
+#         game = Games.objects.filter(name=game_name).first()
+#         if game is None:
+#             return Response(
+#                 {"message": "Game not found"},
+#                 status=status.HTTP_404_NOT_FOUND,
+#             )
+
+#         category = ItemsCategories.objects.filter(
+#             GameName=game,
+#             CategoryName=name,
+#         ).first()
+#         if category is None:
+#             return Response(
+#                 {"message": "Category not found"},
+#                 status=status.HTTP_404_NOT_FOUND,
+#             )
+
+#         if name == new_name:
+#             return Response({"name": new_name})
+
+#         category.CategoryName = new_name
+#         try:
+#             category.save()
+#         except IntegrityError:
+#             return Response(
+#                 {"message": "A category with that name already exists"},
+#                 status=status.HTTP_409_CONFLICT,
+#             )
+
+#         return Response({"name": new_name, "oldName": name})
+
+#     def delete(self, request):
+#         game_name = (
+#             request.data.get("gameName")
+#             or request.query_params.get("gameName")
+#             or ""
+#         ).strip()
+#         name = (
+#             request.data.get("name")
+#             or request.query_params.get("name")
+#             or ""
+#         ).strip()
+
+#         if not game_name:
+#             return Response(
+#                 {"message": "Game name is required"},
+#                 status=status.HTTP_400_BAD_REQUEST,
+#             )
+#         if not name:
+#             return Response(
+#                 {"message": "Category name is required"},
+#                 status=status.HTTP_400_BAD_REQUEST,
+#             )
+
+#         game = Games.objects.filter(name=game_name).first()
+#         if game is None:
+#             return Response(
+#                 {"message": "Game not found"},
+#                 status=status.HTTP_404_NOT_FOUND,
+#             )
+
+#         deleted, _ = ItemsCategories.objects.filter(
+#             GameName=game,
+#             CategoryName=name,
+#         ).delete()
+#         if not deleted:
+#             return Response(
+#                 {"message": "Category not found"},
+#                 status=status.HTTP_404_NOT_FOUND,
+#             )
+
+#         return Response({"name": name}, status=status.HTTP_200_OK)
+
+
+# class ManageSubCategories(APIView):
+#     authentication_classes = [CookieJWTAuthentication]
+#     permission_classes = [IsAuthenticated]
+
+#     def post(self, request):
+#         game_name = (request.data.get("gameName") or "").strip()
+#         category_name = (request.data.get("categoryName") or "").strip()
+#         name = (request.data.get("name") or "").strip()
+
+
+#         if not game_name:
+#             return Response(
+#                 {"message": "Game name is required"},
+#                 status=status.HTTP_400_BAD_REQUEST,
+#             )
+
+#         if not category_name:
+#             return Response(
+#                 {"message": "Category name is required"},
+#                 status=status.HTTP_400_BAD_REQUEST,
+#             )
+
+#         if not name:
+#             return Response(
+#                 {"message": "Subcategory name is required"},
+#                 status=status.HTTP_400_BAD_REQUEST,
+#             )
+
+#         game = Games.objects.filter(name=game_name).first()
+#         if game is None:
+#             return Response(
+#                 {"message": "Game not found"},
+#                 status=status.HTTP_404_NOT_FOUND,
+#             )
+
+#         category = ItemsCategories.objects.filter(
+#             GameName=game,
+#             CategoryName=category_name,
+#         ).first()
+#         if category is None:
+#             return Response(
+#                 {"message": "Category not found"},
+#                 status=status.HTTP_404_NOT_FOUND,
+#             )
+
+#         try:
+#             ItemsSubCategories.objects.create(
+#                 SubCategoryName=name,
+#                 PrimalCategory=category,
+#                 GameName=game,
+#             )
+#         except IntegrityError:
+#             return Response(
+#                 {"message": "A subcategory with that name already exists"},
+#                 status=status.HTTP_409_CONFLICT,
+#             )
+
+#         return Response(
+#             {"name": name, "categoryName": category_name},
+#             status=status.HTTP_201_CREATED,
+#         )
+
+#     def patch(self, request):
+#         game_name = (request.data.get("gameName") or "").strip()
+#         category_name = (request.data.get("categoryName") or "").strip()
+#         name = (request.data.get("name") or "").strip()
+#         new_name = (request.data.get("newName") or "").strip()
+#         icon = request.FILES.get('icon')
+#         clear_icon = str(request.data.get("clearIcon") or "").strip().lower() in (
+#             "1",
+#             "true",
+#             "on",
+#             "yes",
+#         )
+
+#         if not game_name:
+#             return Response(
+#                 {"message": "Game name is required"},
+#                 status=status.HTTP_400_BAD_REQUEST,
+#             )
+
+#         if not category_name:
+#             return Response(
+#                 {"message": "Category name is required"},
+#                 status=status.HTTP_400_BAD_REQUEST,
+#             )
+
+#         if not name or not new_name:
+#             return Response(
+#                 {"message": "Current name and new name are required"},
+#                 status=status.HTTP_400_BAD_REQUEST,
+#             )
+
+#         game = Games.objects.filter(name=game_name).first()
+#         if game is None:
+#             return Response(
+#                 {"message": "Game not found"},
+#                 status=status.HTTP_404_NOT_FOUND,
+#             )
+
+#         category = ItemsCategories.objects.filter(
+#             GameName=game,
+#             CategoryName=category_name,
+#         ).first()
+#         if category is None:
+#             return Response(
+#                 {"message": "Category not found"},
+#                 status=status.HTTP_404_NOT_FOUND,
+#             )
+
+#         subcategory = ItemsSubCategories.objects.filter(
+#             GameName=game,
+#             PrimalCategory=category,
+#             SubCategoryName=name,
+#         ).first()
+#         if subcategory is None:
+#             return Response(
+#                 {"message": "Subcategory not found"},
+#                 status=status.HTTP_404_NOT_FOUND,
+#             )
+
+#         if name == new_name and not icon and not clear_icon:
+#             return Response({"name": new_name, "categoryName": category_name})
+
+#         subcategory.SubCategoryName = new_name
+#         try:
+#             if icon:
+#                 filename = str(uuid.uuid4()) + ".png"
+#                 default_storage.save(
+#                     f"{game_name}/icons/{filename}",
+#                     icon,
+#                 )
+#                 subcategory.Default_icon = filename
+#             elif clear_icon:
+#                 subcategory.Default_icon = None
+#             subcategory.save()
+#         except IntegrityError:
+#             return Response(
+#                 {"message": "A subcategory with that name already exists"},
+#                 status=status.HTTP_409_CONFLICT,
+#             )
+
+#         return Response(
+#             {"name": new_name, "oldName": name, "categoryName": category_name}
+#         )
+
+#     def delete(self, request):
+#         game_name = (
+#             request.data.get("gameName")
+#             or request.query_params.get("gameName")
+#             or ""
+#         ).strip()
+#         category_name = (
+#             request.data.get("categoryName")
+#             or request.query_params.get("categoryName")
+#             or ""
+#         ).strip()
+#         name = (
+#             request.data.get("name")
+#             or request.query_params.get("name")
+#             or ""
+#         ).strip()
+
+#         if not game_name:
+#             return Response(
+#                 {"message": "Game name is required"},
+#                 status=status.HTTP_400_BAD_REQUEST,
+#             )
+#         if not category_name:
+#             return Response(
+#                 {"message": "Category name is required"},
+#                 status=status.HTTP_400_BAD_REQUEST,
+#             )
+#         if not name:
+#             return Response(
+#                 {"message": "Subcategory name is required"},
+#                 status=status.HTTP_400_BAD_REQUEST,
+#             )
+
+#         game = Games.objects.filter(name=game_name).first()
+#         if game is None:
+#             return Response(
+#                 {"message": "Game not found"},
+#                 status=status.HTTP_404_NOT_FOUND,
+#             )
+
+#         category = ItemsCategories.objects.filter(
+#             GameName=game,
+#             CategoryName=category_name,
+#         ).first()
+#         if category is None:
+#             return Response(
+#                 {"message": "Category not found"},
+#                 status=status.HTTP_404_NOT_FOUND,
+#             )
+
+#         deleted, _ = ItemsSubCategories.objects.filter(
+#             GameName=game,
+#             PrimalCategory=category,
+#             SubCategoryName=name,
+#         ).delete()
+#         if not deleted:
+#             return Response(
+#                 {"message": "Subcategory not found"},
+#                 status=status.HTTP_404_NOT_FOUND,
+#             )
+
+#         return Response(
+#             {"name": name, "categoryName": category_name},
+#             status=status.HTTP_200_OK,
+#         )
+
+
+# class ManageItems(APIView):
+#     authentication_classes = [CookieJWTAuthentication]
+#     permission_classes = [IsAuthenticated]
+
+#     def post(self, request):
+#         game_name = (request.data.get("gameName") or "").strip()
+#         name = (request.data.get("name") or "").strip()
+#         category_name = (request.data.get("categoryName") or "").strip()
+#         subcategory_name = (request.data.get("subcategoryName") or "").strip()
+
+#         if not game_name:
+#             return Response(
+#                 {"message": "Game name is required"},
+#                 status=status.HTTP_400_BAD_REQUEST,
+#             )
+#         if not name:
+#             return Response(
+#                 {"message": "Marker name is required"},
+#                 status=status.HTTP_400_BAD_REQUEST,
+#             )
+#         if not category_name or not subcategory_name:
+#             return Response(
+#                 {"message": "Category and subcategory are required"},
+#                 status=status.HTTP_400_BAD_REQUEST,
+#             )
+
+#         try:
+#             x_location = int(round(float(request.data.get("x"))))
+#             y_location = int(round(float(request.data.get("y"))))
+#         except (TypeError, ValueError):
+#             return Response(
+#                 {"message": "X and Y are required"},
+#                 status=status.HTTP_400_BAD_REQUEST,
+#             )
+
+#         game = Games.objects.filter(name=game_name).first()
+#         if game is None:
+#             return Response(
+#                 {"message": "Game not found"},
+#                 status=status.HTTP_404_NOT_FOUND,
+#             )
+
+#         category = ItemsCategories.objects.filter(
+#             GameName=game,
+#             CategoryName=category_name,
+#         ).first()
+#         if category is None:
+#             return Response(
+#                 {"message": "Category not found"},
+#                 status=status.HTTP_404_NOT_FOUND,
+#             )
+
+#         subcategory = ItemsSubCategories.objects.filter(
+#             GameName=game,
+#             PrimalCategory=category,
+#             SubCategoryName=subcategory_name,
+#         ).first()
+#         if subcategory is None:
+#             return Response(
+#                 {"message": "Subcategory not found"},
+#                 status=status.HTTP_404_NOT_FOUND,
+#             )
+
+#         icon_file = request.FILES.get("icon")
+#         icon_name = save_game_icon(game_name, icon_file)
+
+#         item = Items.objects.create(
+#             ItemName=name,
+#             GameName=game,
+#             CategoryName=category,
+#             SubCategoryName=subcategory,
+#             x_location=x_location,
+#             y_location=y_location,
+#             **({"icon": icon_name} if icon_name else {}),
+#         )
+
+#         return Response(
+#             {
+#                 "name": item.ItemName,
+#                 "x": item.x_location,
+#                 "y": item.y_location,
+#                 "icon": item.icon if item.icon and "." in str(item.icon) else None,
+#                 "categoryName": category_name,
+#                 "subcategoryName": subcategory_name,
+#             },
+#             status=status.HTTP_201_CREATED,
+#         )
+
+#     def patch(self, request):
+#         game_name = (request.data.get("gameName") or "").strip()
+#         new_name = (request.data.get("newName") or "").strip()
+#         item_id = request.data.get("id")
+
+#         if not game_name:
+#             return Response(
+#                 {"message": "Game name is required"},
+#                 status=status.HTTP_400_BAD_REQUEST,
+#             )
+#         if not new_name:
+#             return Response(
+#                 {"message": "Marker name is required"},
+#                 status=status.HTTP_400_BAD_REQUEST,
+#             )
+#         try:
+#             item_id = int(item_id)
+#         except (TypeError, ValueError):
+#             return Response(
+#                 {"message": "Item id is required"},
+#                 status=status.HTTP_400_BAD_REQUEST,
+#             )
+
+#         game = Games.objects.filter(name=game_name).first()
+#         if game is None:
+#             return Response(
+#                 {"message": "Game not found"},
+#                 status=status.HTTP_404_NOT_FOUND,
+#             )
+
+#         item = Items.objects.filter(id=item_id, GameName=game).first()
+#         if item is None:
+#             return Response(
+#                 {"message": "Item not found"},
+#                 status=status.HTTP_404_NOT_FOUND,
+#             )
+
+#         update_fields = []
+#         if item.ItemName != new_name:
+#             item.ItemName = new_name
+#             update_fields.append("ItemName")
+
+#         x_raw = request.data.get("x", None)
+#         y_raw = request.data.get("y", None)
+#         if x_raw is not None and x_raw != "":
+#             try:
+#                 x_location = int(round(float(x_raw)))
+#             except (TypeError, ValueError):
+#                 return Response(
+#                     {"message": "X must be a number"},
+#                     status=status.HTTP_400_BAD_REQUEST,
+#                 )
+#             if item.x_location != x_location:
+#                 item.x_location = x_location
+#                 update_fields.append("x_location")
+#         if y_raw is not None and y_raw != "":
+#             try:
+#                 y_location = int(round(float(y_raw)))
+#             except (TypeError, ValueError):
+#                 return Response(
+#                     {"message": "Y must be a number"},
+#                     status=status.HTTP_400_BAD_REQUEST,
+#                 )
+#             if item.y_location != y_location:
+#                 item.y_location = y_location
+#                 update_fields.append("y_location")
+
+#         icon_file = request.FILES.get("icon")
+#         clear_icon = str(request.data.get("clearIcon") or "").strip().lower() in (
+#             "1",
+#             "true",
+#             "on",
+#             "yes",
+#         )
+#         if icon_file:
+#             icon_name = save_game_icon(game_name, icon_file)
+#             if icon_name:
+#                 item.icon = icon_name
+#                 update_fields.append("icon")
+#         elif clear_icon:
+#             item.icon = None
+#             update_fields.append("icon")
+
+#         if update_fields:
+#             item.save(update_fields=update_fields)
+
+#         return Response({
+#             "id": item.id,
+#             "name": item.ItemName,
+#             "x": item.x_location,
+#             "y": item.y_location,
+#             "icon": item.icon if item.icon and "." in str(item.icon) else None,
+#         })
+
+#     def delete(self, request):
+#         game_name = (
+#             request.data.get("gameName")
+#             or request.query_params.get("gameName")
+#             or ""
+#         ).strip()
+#         item_id = request.data.get("id") or request.query_params.get("id")
+
+#         if not game_name:
+#             return Response(
+#                 {"message": "Game name is required"},
+#                 status=status.HTTP_400_BAD_REQUEST,
+#             )
+#         try:
+#             item_id = int(item_id)
+#         except (TypeError, ValueError):
+#             return Response(
+#                 {"message": "Item id is required"},
+#                 status=status.HTTP_400_BAD_REQUEST,
+#             )
+
+#         game = Games.objects.filter(name=game_name).first()
+#         if game is None:
+#             return Response(
+#                 {"message": "Game not found"},
+#                 status=status.HTTP_404_NOT_FOUND,
+#             )
+
+#         deleted, _ = Items.objects.filter(id=item_id, GameName=game).delete()
+#         if not deleted:
+#             return Response(
+#                 {"message": "Item not found"},
+#                 status=status.HTTP_404_NOT_FOUND,
+#             )
+
+#         return Response({"id": item_id}, status=status.HTTP_200_OK)
  

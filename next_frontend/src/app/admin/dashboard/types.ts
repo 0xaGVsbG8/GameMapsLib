@@ -21,10 +21,12 @@ export type GameItem = {
     unique_token: string
     x: number
     y: number
+    icon: string | null
 }
 
 export type GameSubCategory = {
     name: string
+    default_icon: string
     items?: GameItem[]
 }
 

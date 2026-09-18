@@ -8,7 +8,12 @@ type EditNameWidgetProps = {
   label?: string;
   currentName: string;
   ariaLabel: string;
-  onSave: (newName: string) => Promise<string | null>;
+  showIconInput?: boolean;
+  onSave: (
+    newName: string,
+    iconFile: File | null,
+    clearIcon?: boolean,
+  ) => Promise<string | null>;
   onRenamed: (newName: string) => void;
 };
 
@@ -17,17 +22,22 @@ export function EditNameWidget({
   label = "Name",
   currentName,
   ariaLabel,
+  showIconInput = false,
   onSave,
   onRenamed,
 }: EditNameWidgetProps) {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState("");
+  const [clearIcon, setClearIcon] = useState(false);
   const nameRef = useRef<HTMLInputElement>(null);
+  const iconFileRef = useRef<HTMLInputElement>(null);
+  const fieldId = `rename-${currentName}`;
 
   useEffect(() => {
     if (!open) return;
 
     if (nameRef.current) nameRef.current.value = currentName;
+    setClearIcon(false);
     nameRef.current?.focus();
     nameRef.current?.select();
 
@@ -42,19 +52,22 @@ export function EditNameWidget({
   const close = () => {
     setOpen(false);
     setError("");
+    setClearIcon(false);
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const newName = nameRef.current?.value.trim();
+    const iconFile = iconFileRef.current?.files?.[0] ?? null;
     if (!newName) return;
-    if (newName === currentName) {
+
+    if (newName === currentName && !iconFile && !clearIcon) {
       close();
       return;
     }
 
     setError("");
-    const message = await onSave(newName);
+    const message = await onSave(newName, clearIcon ? null : iconFile, clearIcon);
     if (message) {
       setError(message);
       return;
@@ -90,15 +103,34 @@ export function EditNameWidget({
             <h2>{title}</h2>
 
             <div className="add-game-field">
-              <label htmlFor={`rename-${currentName}`}>{label}</label>
+              <label htmlFor={fieldId}>{label}</label>
               <input
                 ref={nameRef}
-                id={`rename-${currentName}`}
+                id={fieldId}
                 name="name"
                 type="text"
                 maxLength={100}
                 placeholder={label}
               />
+              {showIconInput && (
+                <>
+                  <input
+                    ref={iconFileRef}
+                    name="icon"
+                    type="file"
+                    accept="image/*"
+                    disabled={clearIcon}
+                  />
+                  <label className="add-game-check">
+                    <input
+                      type="checkbox"
+                      checked={clearIcon}
+                      onChange={(event) => setClearIcon(event.target.checked)}
+                    />
+                    Clear icon
+                  </label>
+                </>
+              )}
             </div>
 
             <div className="add-game-error">{error}</div>

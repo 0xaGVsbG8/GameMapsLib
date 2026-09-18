@@ -148,10 +148,10 @@ class Items(models.Model):
     )
     
     icon = models.CharField(
-        max_length=36,
+        max_length=200,
         default=uuid.uuid4,
         null=True,
-        # unique=True
+        blank=True,
     ) #path
     
     x_location = models.IntegerField()

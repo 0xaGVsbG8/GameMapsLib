@@ -131,6 +131,7 @@ CORS_ALLOW_CREDENTIALS = True
 
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
+    "http://192.168.1.99:3000",
     "http://127.0.0.1:3000",
 ]
 

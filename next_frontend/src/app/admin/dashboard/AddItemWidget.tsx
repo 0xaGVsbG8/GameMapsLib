@@ -35,6 +35,7 @@ export function AddItemWidget({
   const [xValue, setXValue] = useState("");
   const [yValue, setYValue] = useState("");
   const nameRef = useRef<HTMLInputElement>(null);
+  const iconFileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -55,6 +56,7 @@ export function AddItemWidget({
     setError("");
     setXValue("");
     setYValue("");
+    if (iconFileRef.current) iconFileRef.current.value = "";
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -82,18 +84,20 @@ export function AddItemWidget({
     setError("");
     setBusy(true);
 
+    const iconFile = iconFileRef.current?.files?.[0] ?? null;
+    const formData = new FormData();
+    formData.append("gameName", gameName);
+    formData.append("name", name);
+    formData.append("categoryName", categoryName);
+    formData.append("subcategoryName", subcategoryName);
+    formData.append("x", String(x));
+    formData.append("y", String(y));
+    if (iconFile) formData.append("icon", iconFile);
+
     const response = await fetch("http://localhost:8000/blog/ManageItems", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify({
-        gameName,
-        name,
-        categoryName,
-        subcategoryName,
-        x,
-        y,
-      }),
+      body: formData,
     });
 
     if (!response.ok) {
@@ -104,6 +108,7 @@ export function AddItemWidget({
     }
 
     if (nameRef.current) nameRef.current.value = "";
+    if (iconFileRef.current) iconFileRef.current.value = "";
     setXValue("");
     setYValue("");
     setBusy(false);
@@ -146,6 +151,18 @@ export function AddItemWidget({
                 maxLength={100}
                 placeholder="Enter marker name"
               />
+            </div>
+
+            <div className="add-game-field">
+              <label htmlFor={`item-icon-${fieldId}`}>Icon</label>
+              <input
+                ref={iconFileRef}
+                id={`item-icon-${fieldId}`}
+                name="icon"
+                type="file"
+                accept="image/*"
+              />
+              <p className="add-game-hint">Optional. Uses the subcategory icon if empty.</p>
             </div>
 
             <div className="add-map-size-row">

@@ -111,6 +111,7 @@ export function getGameItems(gameInfo: GameInfo | null) {
       (subcategory.items ?? []).map((item) => ({
         ...item,
         subcategoryName: subcategory.name,
+        icon_src: item.icon || subcategory.default_icon,
       })),
     ),
   );
@@ -133,4 +134,17 @@ export function calc_marker(
     x: box.offsetLeft + box.clientLeft + box.offsetX + displayX,
     y: box.offsetTop + box.clientTop + box.offsetY + displayY,
   };
+}
+
+export function sanitizeCoord(value: string) {
+  const negative = value.trimStart().startsWith("-");
+  const cleaned = value.replace(/[^\d.]/g, "");
+  const dot = cleaned.indexOf(".");
+  const next =
+    dot === -1
+      ? cleaned
+      : cleaned.slice(0, dot + 1) + cleaned.slice(dot + 1).replace(/\./g, "");
+  if (negative && next !== "") return `-${next}`;
+  if (negative && next === "") return "-";
+  return next;
 }

@@ -4,14 +4,16 @@ import { useState } from "react";
 import { AddCategoryWidget } from "./AddCategoryWidget";
 import { AddItemWidget } from "./AddItemWidget";
 import { AddSubcategoryWidget } from "./AddSubcategoryWidget";
+import { EditMarkerWidget } from "./EditMarkerWidget";
 import { EditNameWidget } from "./EditNameWidget";
-import { GameCategory } from "./types";
+import { GameCategory, GameItem } from "./types";
 import "./add-game.css";
 
 type CategorySidebarProps = {
   gameName: string;
   categories: GameCategory[];
   onChanged: () => void;
+  onHoverItem?: (id: number | null) => void;
 };
 
 type PendingDelete =
@@ -21,12 +23,23 @@ type PendingDelete =
 async function renameRequest(
   url: string,
   body: Record<string, string>,
+  iconFile: File | null,
+  clearIcon = false,
 ): Promise<string | null> {
+  const formData = new FormData();
+
+  iconFile && formData.append("icon", iconFile);
+  if (clearIcon) formData.append("clearIcon", "true");
+  formData.append("gameName", body.gameName);
+  formData.append("categoryName", body.categoryName);
+  formData.append("name", body.name);
+  formData.append("newName", body.newName);
+
   const response = await fetch(url, {
     method: "PATCH",
-    headers: { "Content-Type": "application/json" },
+    // headers: { "Content-Type": "application/json" },
     credentials: "include",
-    body: JSON.stringify(body),
+    body: formData,
   });
 
   if (response.ok) return null;
@@ -73,12 +86,13 @@ export function CategorySidebar({
   gameName,
   categories,
   onChanged,
+  onHoverItem,
 }: CategorySidebarProps) {
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [editingItem, setEditingItem] = useState<GameItem | null>(null);
   const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(null);
   const [deleteError, setDeleteError] = useState("");
   const [deleteBusy, setDeleteBusy] = useState(false);
-
   const toggleSubcategory = (key: string) => {
     setExpanded((current) => {
       const next = new Set(current);
@@ -169,11 +183,15 @@ export function CategorySidebar({
                     currentName={category.name}
                     ariaLabel={`Rename ${category.name}`}
                     onSave={(newName) =>
-                      renameRequest("http://localhost:8000/blog/ManageCategories", {
-                        gameName,
-                        name: category.name,
-                        newName,
-                      })
+                      renameRequest(
+                        "http://localhost:8000/blog/ManageCategories",
+                        {
+                          gameName,
+                          name: category.name,
+                          newName,
+                        },
+                        null,
+                      )
                     }
                     onRenamed={onChanged}
                   />
@@ -208,7 +226,16 @@ export function CategorySidebar({
                         <span className={isOpen ? "ide-chevron open" : "ide-chevron"}>
                           ▸
                         </span>
-                        <span className="ide-subcategory-name">{subcategory.name}</span>
+                        <span className="ide-subcategory-name">
+                          {subcategory.default_icon && (
+                            <img
+                              className="ide-subcategory-icon"
+                              src={`http://localhost:8000/media/${gameName}/icons/${subcategory.default_icon}`}
+                              alt=""
+                            />
+                          )}
+                          <span className="ide-subcategory-label">{subcategory.name}</span>
+                        </span>
                       </button>
                       <div className="ide-row-actions">
                         <EditNameWidget
@@ -216,7 +243,8 @@ export function CategorySidebar({
                           label="Subcategory name"
                           currentName={subcategory.name}
                           ariaLabel={`Rename ${subcategory.name}`}
-                          onSave={(newName) =>
+                          showIconInput
+                          onSave={(newName, iconFile, clearIcon) =>
                             renameRequest(
                               "http://localhost:8000/blog/ManageSubCategories",
                               {
@@ -225,6 +253,8 @@ export function CategorySidebar({
                                 name: subcategory.name,
                                 newName,
                               },
+                              iconFile,
+                              clearIcon,
                             )
                           }
                           onRenamed={onChanged}
@@ -251,9 +281,36 @@ export function CategorySidebar({
                     {isOpen &&
                       (items.length ? (
                         items.map((item) => (
-                          <div className="ide-item-row" key={item.id}>
-                            <span className="ide-item-name">{item.name}</span>
+                          <div
+                            className="ide-item-row"
+                            key={item.id}
+                            onMouseEnter={() => onHoverItem?.(item.id)}
+                            onMouseLeave={() => onHoverItem?.(null)}
+                          >
+                            <span className="ide-item-name">
+                              {(item.icon || subcategory.default_icon) && (
+                                <img
+                                  className="ide-subcategory-icon"
+                                  src={`http://localhost:8000/media/${gameName}/icons/${item.icon || subcategory.default_icon}`}
+                                  alt=""
+                                />
+                              )}
+                              <span className="ide-item-label">{item.name}</span>
+                            </span>
                             <div className="ide-row-actions">
+                              <button
+                                className="ide-row-edit"
+                                type="button"
+                                aria-label={`Edit ${item.name}`}
+                                onClick={() => setEditingItem(item)}
+                              >
+                                <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true">
+                                  <path
+                                    fill="currentColor"
+                                    d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"
+                                  />
+                                </svg>
+                              </button>
                               <DeleteButton
                                 label={`Delete ${item.name}`}
                                 onClick={() => deleteItem(item.id)}
@@ -274,6 +331,23 @@ export function CategorySidebar({
         )}
       </div>
 
+      {editingItem && (
+        <EditMarkerWidget
+          gameName={gameName}
+          marker={{
+            id: editingItem.id,
+            name: editingItem.name,
+            x: editingItem.x,
+            y: editingItem.y,
+          }}
+          startAtDetails
+          onClose={() => setEditingItem(null)}
+          onSaved={() => {
+            setEditingItem(null);
+            onChanged();
+          }}
+        />
+      )}
       {pendingDelete && (
         <div className="add-game-overlay" onClick={closeDelete}>
           <div

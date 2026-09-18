@@ -34,6 +34,7 @@ export function AddMarkerWidget({
     categories[0]?.subcategories[0]?.name ?? "",
   );
   const nameRef = useRef<HTMLInputElement>(null);
+  const iconFileRef = useRef<HTMLInputElement>(null);
 
   const subcategories = useMemo(
     () =>
@@ -57,13 +58,16 @@ export function AddMarkerWidget({
   useEffect(() => {
     if (step !== "menu") return;
 
-    const close = () => onClose();
+    const close = (event: PointerEvent) => {
+      if (event.button !== 0) return;
+      onClose();
+    };
     const id = window.setTimeout(() => {
-      window.addEventListener("mousedown", close);
+      window.addEventListener("pointerdown", close);
     }, 0);
     return () => {
       window.clearTimeout(id);
-      window.removeEventListener("mousedown", close);
+      window.removeEventListener("pointerdown", close);
     };
   }, [step, onClose]);
 
@@ -96,18 +100,20 @@ export function AddMarkerWidget({
     setError("");
     setBusy(true);
 
+    const iconFile = iconFileRef.current?.files?.[0] ?? null;
+    const formData = new FormData();
+    formData.append("gameName", gameName);
+    formData.append("name", name);
+    formData.append("categoryName", categoryName);
+    formData.append("subcategoryName", subcategoryName);
+    formData.append("x", String(click.mapX));
+    formData.append("y", String(click.mapY));
+    if (iconFile) formData.append("icon", iconFile);
+
     const response = await fetch("http://localhost:8000/blog/ManageItems", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify({
-        gameName,
-        name,
-        categoryName,
-        subcategoryName,
-        x: click.mapX,
-        y: click.mapY,
-      }),
+      body: formData,
     });
 
     if (!response.ok) {
@@ -126,6 +132,7 @@ export function AddMarkerWidget({
       <div
         className="marker-context-menu"
         style={menuStyle}
+        onPointerDown={(event) => event.stopPropagation()}
         onMouseDown={(event) => event.stopPropagation()}
       >
         <button type="button" onClick={() => setStep("details")}>
@@ -154,6 +161,12 @@ export function AddMarkerWidget({
             maxLength={100}
             placeholder="Enter marker name"
           />
+        </div>
+
+        <div className="add-game-field">
+          <label htmlFor="marker-icon">Icon</label>
+          <input ref={iconFileRef} id="marker-icon" name="icon" type="file" accept="image/*" />
+          <p className="add-game-hint">Optional. Uses the subcategory icon if empty.</p>
         </div>
 
         <div className="add-game-field">
