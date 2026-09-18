@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { apiUrl } from "../api";
 import "./add-game.css";
 
 type AddCategoryWidgetProps = {
@@ -43,7 +44,7 @@ export function AddCategoryWidget({
 
     setError("");
 
-    const response = await fetch("http://localhost:8000/blog/ManageCategories", {
+    const response = await fetch(apiUrl("/blog/ManageCategories"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",

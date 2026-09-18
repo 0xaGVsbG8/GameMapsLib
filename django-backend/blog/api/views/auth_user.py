@@ -37,20 +37,21 @@ class AuthUserView(APIView):
             "username": user.username,
         })
 
+        cookie_kwargs = {
+            "httponly": True,
+            "secure": False,
+            "samesite": "Lax",
+            "path": "/",
+        }
         response.set_cookie(
             key="access_token",
             value=str(refresh.access_token),
-            httponly=True,
-            secure=False,
-            samesite="Lax",
+            **cookie_kwargs,
         )
-
         response.set_cookie(
             key="refresh_token",
             value=str(refresh),
-            httponly=True,
-            secure=False,
-            samesite="Lax",
+            **cookie_kwargs,
         )
 
         return response

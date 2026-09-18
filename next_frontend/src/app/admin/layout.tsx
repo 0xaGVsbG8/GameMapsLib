@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { createContext, useContext } from "react";
+import { apiUrl } from "./api";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -12,12 +13,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     const checkAuth = async () => {
-      const response = await fetch(
-        "http://localhost:8000/blog/isUserAuthed",
-        {
-          credentials: "include",
-        }
-      );
+      const response = await fetch(apiUrl("/blog/isUserAuthed"), {
+        credentials: "include",
+      });
   
       const isLoginPage = pathname === "/admin/login";
   

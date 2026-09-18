@@ -8,6 +8,7 @@ import { EditMarkerWidget, MarkerEdit } from "./EditMarkerWidget";
 import { GameSidebar } from "./GameSidebar";
 import { MapStage } from "./MapStage";
 import { GameInfo, info_type } from "./types";
+import { apiUrl } from "../api";
 import "./add-game.css";
 import "./dashboard.css";
 
@@ -45,7 +46,7 @@ export default function AdminDashboardPage() {
   }
 
   const gather_info = async() => {
-    const response = await fetch("http://localhost:8000/blog/getGlobalInfo",{
+    const response = await fetch(apiUrl("/blog/getGlobalInfo"),{
       method:'GET',
       credentials: 'include'
     })
@@ -55,7 +56,7 @@ export default function AdminDashboardPage() {
 
   const handleGetGameInfo = async(name: string) => {
     setBrowsingGame(name)
-    const response = await fetch(`http://localhost:8000/blog/getGameInfo?GameName=${encodeURIComponent(name)}`,{
+    const response = await fetch(apiUrl(`/blog/getGameInfo?GameName=${encodeURIComponent(name)}`),{
       method:'GET',
       credentials: 'include'
     })
@@ -85,7 +86,7 @@ export default function AdminDashboardPage() {
   const setGamePublic = async (nextPublic: boolean) => {
     if (!browsingGame || !gameInfo) return
     setPublishBusy(true)
-    const response = await fetch("http://localhost:8000/blog/ManageGames", {
+    const response = await fetch(apiUrl("/blog/ManageGames"), {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
@@ -119,7 +120,7 @@ export default function AdminDashboardPage() {
   const selectedMap =
     gameInfo?.maps.find((map) => map.image_path) ?? gameInfo?.maps[0]
   const mapSrc = selectedMap?.image_path
-    ? selectedMap.image_url || `http://localhost:8000/media/${selectedMap.image_path}`
+    ? selectedMap.image_url || apiUrl(`/media/${selectedMap.image_path}`)
     : ""
 
   useEffect(()=>{gather_info()},[])

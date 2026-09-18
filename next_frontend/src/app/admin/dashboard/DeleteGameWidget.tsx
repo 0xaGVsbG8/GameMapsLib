@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { apiUrl } from "../api";
 import "./add-game.css";
 
 type DeleteGameWidgetProps = {
@@ -28,7 +29,7 @@ export function DeleteGameWidget({ gameName, onClose, onDeleted }: DeleteGameWid
     setError("");
     setBusy(true);
 
-    const response = await fetch("http://localhost:8000/blog/ManageGames", {
+    const response = await fetch(apiUrl("/blog/ManageGames"), {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
       credentials: "include",

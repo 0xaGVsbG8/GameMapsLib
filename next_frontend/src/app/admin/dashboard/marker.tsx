@@ -1,5 +1,6 @@
 'use client'
 
+import { apiUrl } from "../api";
 export type MarkerEditClick = {
     screenX: number
     screenY: number
@@ -48,7 +49,7 @@ const Marker = ({ name, subcategoryName, x, y, selected, highlighted, icon_src, 
             {icon_src ? (
                 <img
                     className="map-marker-icon"
-                    src={`http://localhost:8000/media/${gameName}/icons/${icon_src}`}
+                    src={apiUrl(`/media/${gameName}/icons/${icon_src}`)}
                     alt=""
                 />
             ) : null}

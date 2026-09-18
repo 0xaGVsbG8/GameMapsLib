@@ -7,6 +7,7 @@ import { AddSubcategoryWidget } from "./AddSubcategoryWidget";
 import { EditMarkerWidget } from "./EditMarkerWidget";
 import { EditNameWidget } from "./EditNameWidget";
 import { GameCategory, GameItem } from "./types";
+import { apiUrl } from "../api";
 import "./add-game.css";
 
 type CategorySidebarProps = {
@@ -115,13 +116,13 @@ export function CategorySidebar({
 
     let message: string | null = null;
     if (pendingDelete.kind === "category") {
-      message = await deleteRequest("http://localhost:8000/blog/ManageCategories", {
+      message = await deleteRequest(apiUrl("/blog/ManageCategories"), {
         gameName,
         name: pendingDelete.name,
       });
     } else {
       message = await deleteRequest(
-        "http://localhost:8000/blog/ManageSubCategories",
+        apiUrl("/blog/ManageSubCategories"),
         {
           gameName,
           categoryName: pendingDelete.categoryName,
@@ -142,7 +143,7 @@ export function CategorySidebar({
   };
 
   const deleteItem = async (id: number) => {
-    const message = await deleteRequest("http://localhost:8000/blog/ManageItems", {
+    const message = await deleteRequest(apiUrl("/blog/ManageItems"), {
       gameName,
       id,
     });
@@ -184,7 +185,7 @@ export function CategorySidebar({
                     ariaLabel={`Rename ${category.name}`}
                     onSave={(newName) =>
                       renameRequest(
-                        "http://localhost:8000/blog/ManageCategories",
+                        apiUrl("/blog/ManageCategories"),
                         {
                           gameName,
                           name: category.name,
@@ -230,7 +231,7 @@ export function CategorySidebar({
                           {subcategory.default_icon && (
                             <img
                               className="ide-subcategory-icon"
-                              src={`http://localhost:8000/media/${gameName}/icons/${subcategory.default_icon}`}
+                              src={apiUrl(`/media/${gameName}/icons/${subcategory.default_icon}`)}
                               alt=""
                             />
                           )}
@@ -246,7 +247,7 @@ export function CategorySidebar({
                           showIconInput
                           onSave={(newName, iconFile, clearIcon) =>
                             renameRequest(
-                              "http://localhost:8000/blog/ManageSubCategories",
+                              apiUrl("/blog/ManageSubCategories"),
                               {
                                 gameName,
                                 categoryName: category.name,
@@ -291,7 +292,7 @@ export function CategorySidebar({
                               {(item.icon || subcategory.default_icon) && (
                                 <img
                                   className="ide-subcategory-icon"
-                                  src={`http://localhost:8000/media/${gameName}/icons/${item.icon || subcategory.default_icon}`}
+                                  src={apiUrl(`/media/${gameName}/icons/${item.icon || subcategory.default_icon}`)}
                                   alt=""
                                 />
                               )}

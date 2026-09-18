@@ -2,6 +2,7 @@
 
 import { AddGameWidget } from "./AddGameWidget";
 import { EditNameWidget } from "./EditNameWidget";
+import { apiUrl } from "../api";
 
 type GameSidebarProps = {
   games: string[];
@@ -48,7 +49,7 @@ export function GameSidebar({
                 currentName={game}
                 ariaLabel={`Rename ${game}`}
                 onSave={async (newName) => {
-                  const response = await fetch("http://localhost:8000/blog/ManageGames", {
+                  const response = await fetch(apiUrl("/blog/ManageGames"), {
                     method: "PATCH",
                     headers: { "Content-Type": "application/json" },
                     credentials: "include",

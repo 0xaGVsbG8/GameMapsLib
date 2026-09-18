@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { apiUrl } from "../api";
 import "./add-game.css";
 import type { GameCategory } from "./types";
 
@@ -110,7 +111,7 @@ export function AddMarkerWidget({
     formData.append("y", String(click.mapY));
     if (iconFile) formData.append("icon", iconFile);
 
-    const response = await fetch("http://localhost:8000/blog/ManageItems", {
+    const response = await fetch(apiUrl("/blog/ManageItems"), {
       method: "POST",
       credentials: "include",
       body: formData,

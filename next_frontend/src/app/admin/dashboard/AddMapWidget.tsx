@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { apiUrl } from "../api";
 import "./add-game.css";
 import type { GameMapInfo } from "./types";
 
@@ -115,7 +116,7 @@ export function AddMapWidget({
     }
     if (image) body.append("image", image);
 
-    const response = await fetch("http://localhost:8000/blog/addMap", {
+    const response = await fetch(apiUrl("/blog/addMap"), {
       method: "POST",
       credentials: "include",
       body,

@@ -1,6 +1,7 @@
 'use client'
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { apiUrl } from "../api";
 import "./login.css";
 
 // export const metadata: Metadata = {
@@ -23,7 +24,7 @@ export default function AdminLoginPage() {
     e.preventDefault()
     if(!username.current?.value || !passwd.current?.value){return}
 
-    const response = await fetch('http://localhost:8000/blog/auth-user',{
+    const response = await fetch(apiUrl("/blog/auth-user"), {
       method:'POST',
       headers: {
         "Content-Type": "application/json",

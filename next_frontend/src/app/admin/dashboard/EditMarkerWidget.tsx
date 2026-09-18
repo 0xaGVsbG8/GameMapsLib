@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { sanitizeCoord } from "./mapCoords";
+import { apiUrl } from "../api";
 import "./add-game.css";
 
 export type MarkerEdit = {
@@ -116,7 +117,7 @@ export function EditMarkerWidget({
     if (iconFile && !clearIcon) formData.append("icon", iconFile);
     if (clearIcon) formData.append("clearIcon", "true");
 
-    const response = await fetch("http://localhost:8000/blog/ManageItems", {
+    const response = await fetch(apiUrl("/blog/ManageItems"), {
       method: "PATCH",
       credentials: "include",
       body: formData,
@@ -136,7 +137,7 @@ export function EditMarkerWidget({
   const handleDelete = async () => {
     if (busy) return;
     setBusy(true);
-    const response = await fetch("http://localhost:8000/blog/ManageItems", {
+    const response = await fetch(apiUrl("/blog/ManageItems"), {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
       credentials: "include",

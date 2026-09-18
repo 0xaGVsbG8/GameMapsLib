@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { apiUrl } from "../api";
 import "./add-game.css";
 
 type AddGameWidgetProps = {
@@ -38,7 +39,7 @@ export function AddGameWidget({ onAdded, compact = false }: AddGameWidgetProps) 
 
     setError("");
 
-    const response = await fetch("http://localhost:8000/blog/ManageGames", {
+    const response = await fetch(apiUrl("/blog/ManageGames"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
