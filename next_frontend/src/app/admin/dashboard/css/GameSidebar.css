@@ -1,0 +1,85 @@
+.ide-sidebar {
+  width: 260px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+  background: #0c1520;
+  border-right: 1px solid #1e3344;
+}
+
+.ide-game-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+
+.ide-game-row {
+  display: flex;
+  align-items: center;
+}
+
+.ide-game-row:hover,
+.ide-game-row.active {
+  background: #122433;
+}
+
+.ide-game-row.active {
+  background: #1a3f56;
+}
+
+.ide-game-item {
+  flex: 1;
+  min-width: 0;
+  padding: 7px 8px 7px 16px;
+  border: 0;
+  background: transparent;
+  color: #cccccc;
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ide-game-row.active .ide-game-item {
+  color: #ffffff;
+}
+
+.ide-sidebar .ide-panel-arrow {
+  right: 0;
+  transform: translateX(100%);
+  border-radius: 0 10px 10px 0;
+}
+
+.ide-shell:not(.is-games-open) .ide-sidebar {
+  width: 0;
+  min-width: 0;
+  border-right-width: 0;
+}
+
+.ide-shell:not(.is-games-open) .ide-sidebar .ide-sidebar-body {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+@media (max-width: 900px) {
+  .ide-sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    z-index: 30;
+    width: min(300px, 86vw);
+    box-shadow: 8px 0 32px rgba(0, 0, 0, 0.45);
+  }
+
+  .ide-sidebar .ide-sidebar-body {
+    width: min(300px, 86vw);
+  }
+
+  .ide-shell:not(.is-games-open) .ide-sidebar {
+    width: 0;
+    box-shadow: none;
+  }
+}

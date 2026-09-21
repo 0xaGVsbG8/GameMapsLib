@@ -1,8 +1,25 @@
 from django.contrib.auth import authenticate
-from rest_framework import status
+from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
+
+from ..helpers import first_error, request_fields
+
+
+class AuthUserSerializer(serializers.Serializer):
+    username = serializers.CharField(
+        error_messages={
+            "required": "Username is required",
+            "blank": "Username is required",
+        },
+    )
+    password = serializers.CharField(
+        error_messages={
+            "required": "Password is required",
+            "blank": "Password is required",
+        },
+    )
 
 
 class AuthUserView(APIView):
@@ -10,12 +27,16 @@ class AuthUserView(APIView):
     permission_classes = []
 
     def post(self, request):
-        username = request.data.get("username")
-        password = request.data.get("password")
+        serializer = AuthUserSerializer(data=request_fields(request))
+        if not serializer.is_valid():
+            return Response(
+                {"message": first_error(serializer.errors)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         user = authenticate(
-            username=username,
-            password=password,
+            username=serializer.validated_data["username"],
+            password=serializer.validated_data["password"],
         )
 
         if user is None:

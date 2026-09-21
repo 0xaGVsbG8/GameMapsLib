@@ -1,0 +1,116 @@
+.ide-sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 42px;
+  padding: 8px 10px 8px 16px;
+  border-bottom: 1px solid #1e3344;
+}
+
+.ide-sidebar-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: #9aa7b3;
+}
+
+.ide-sidebar-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  width: 260px;
+  overflow: hidden;
+}
+
+.ide-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding-right: 8px;
+}
+
+.ide-row-edit,
+.ide-game-delete {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: transparent;
+  font: inherit;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.ide-game-row:hover .ide-row-edit,
+.ide-game-row.active .ide-row-edit,
+.ide-game-row:hover .ide-game-delete,
+.ide-game-row.active .ide-game-delete,
+.ide-category-row:hover .ide-row-edit,
+.ide-category-row:hover .ide-game-delete,
+.ide-subcategory-row:hover .ide-row-edit,
+.ide-subcategory-row:hover .ide-game-delete,
+.ide-item-row:hover .ide-row-edit,
+.ide-item-row:hover .ide-game-delete {
+  color: #8aa0b3;
+}
+
+.ide-row-edit:hover {
+  background: #1e3344;
+  color: #ededed !important;
+}
+
+.ide-game-delete:hover {
+  background: #2a1216;
+  color: #f0a0a0 !important;
+}
+
+.ide-panel-arrow {
+  position: absolute;
+  top: 8px;
+  z-index: 6;
+  width: 22px;
+  height: 44px;
+  border: 0;
+  background: #163044;
+  color: #e8f2f8;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ide-panel-arrow:hover {
+  background: #1f4a66;
+  color: #ffffff;
+}
+
+.ide-panel-caret {
+  width: 0;
+  height: 0;
+  border-top: 7px solid transparent;
+  border-bottom: 7px solid transparent;
+}
+
+.ide-panel-caret.is-left {
+  border-right: 8px solid currentColor;
+}
+
+.ide-panel-caret.is-right {
+  border-left: 8px solid currentColor;
+}
+
+@media (hover: none) {
+  .ide-row-edit,
+  .ide-game-delete {
+    color: #8aa0b3;
+  }
+}

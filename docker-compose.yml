@@ -1,0 +1,38 @@
+services:
+  django:
+    build: ./django-backend
+    expose:
+      - "8000"
+    environment:
+      ALLOWED_HOSTS: "*"
+      DATA_DIR: /data
+    volumes:
+      - django_data:/data
+    restart: unless-stopped
+
+  next:
+    build: ./next_frontend
+    expose:
+      - "3000"
+    environment:
+      INTERNAL_API_URL: http://django:8000
+      HOSTNAME: 0.0.0.0
+      PORT: 3000
+    depends_on:
+      - django
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - django_data:/data:ro
+    depends_on:
+      - django
+      - next
+    restart: unless-stopped
+
+volumes:
+  django_data:

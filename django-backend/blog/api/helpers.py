@@ -27,6 +27,26 @@ def parse_bool(value):
     return str(value or "").strip().lower() in ("true", "1", "on", "yes")
 
 
+def first_error(errors):
+    if isinstance(errors, dict):
+        for value in errors.values():
+            message = first_error(value)
+            if message:
+                return message
+        return ""
+    if isinstance(errors, list):
+        return first_error(errors[0]) if errors else ""
+    return str(errors)
+
+
+def request_fields(request):
+    payload = {}
+    for source in (request.query_params, request.data):
+        for key in source:
+            payload[key] = source.get(key)
+    return payload
+
+
 def game_folder(game_name):
     folder = get_valid_filename((game_name or "").strip())
     return folder or "game"
@@ -62,7 +82,7 @@ def rename_game_media(old_name, new_name):
     maps_prefix = f"{game_maps_prefix(new_name)}/"
     ensure_game_media(new_name)
 
-    for game_map in GameMaps.objects.filter(GameName_id=new_name):
+    for game_map in GameMaps.objects.filter(GameName__name=new_name):
         path = (game_map.image_path or "").strip()
         if not path:
             continue

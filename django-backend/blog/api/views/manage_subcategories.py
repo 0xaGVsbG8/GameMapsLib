@@ -1,14 +1,84 @@
-import uuid
-
-from django.core.files.storage import default_storage
 from django.db import IntegrityError
-from rest_framework import status
+from rest_framework import serializers, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from ...authentication import CookieJWTAuthentication
 from ...models import Games, ItemsCategories, ItemsSubCategories
+from ..helpers import first_error, request_fields, save_game_icon
+
+
+class CreateSubcategorySerializer(serializers.Serializer):
+    gameName = serializers.CharField(
+        error_messages={
+            "required": "Game name is required",
+            "blank": "Game name is required",
+        },
+    )
+    categoryName = serializers.CharField(
+        error_messages={
+            "required": "Category name is required",
+            "blank": "Category name is required",
+        },
+    )
+    name = serializers.CharField(
+        error_messages={
+            "required": "Subcategory name is required",
+            "blank": "Subcategory name is required",
+        },
+    )
+    icon = serializers.ImageField(required=False, allow_null=True)
+
+
+class RenameSubcategorySerializer(serializers.Serializer):
+    gameName = serializers.CharField(
+        error_messages={
+            "required": "Game name is required",
+            "blank": "Game name is required",
+        },
+    )
+    categoryName = serializers.CharField(
+        error_messages={
+            "required": "Category name is required",
+            "blank": "Category name is required",
+        },
+    )
+    name = serializers.CharField(
+        error_messages={
+            "required": "Current name and new name are required",
+            "blank": "Current name and new name are required",
+        },
+    )
+    newName = serializers.CharField(
+        error_messages={
+            "required": "Current name and new name are required",
+            "blank": "Current name and new name are required",
+        },
+    )
+    icon = serializers.ImageField(required=False, allow_null=True)
+    clearIcon = serializers.BooleanField(required=False, default=False)
+
+
+class DeleteSubcategorySerializer(serializers.Serializer):
+    gameName = serializers.CharField(
+        error_messages={
+            "required": "Game name is required",
+            "blank": "Game name is required",
+        },
+    )
+    categoryName = serializers.CharField(
+        error_messages={
+            "required": "Category name is required",
+            "blank": "Category name is required",
+        },
+    )
+    name = serializers.CharField(
+        error_messages={
+            "required": "Subcategory name is required",
+            "blank": "Subcategory name is required",
+        },
+    )
 
 
 class ManageSubCategories(APIView):
@@ -16,27 +86,16 @@ class ManageSubCategories(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        game_name = (request.data.get("gameName") or "").strip()
-        category_name = (request.data.get("categoryName") or "").strip()
-        name = (request.data.get("name") or "").strip()
-
-        if not game_name:
+        serializer = CreateSubcategorySerializer(data=request_fields(request))
+        if not serializer.is_valid():
             return Response(
-                {"message": "Game name is required"},
+                {"message": first_error(serializer.errors)},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
-        if not category_name:
-            return Response(
-                {"message": "Category name is required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        if not name:
-            return Response(
-                {"message": "Subcategory name is required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        game_name = serializer.validated_data["gameName"]
+        category_name = serializer.validated_data["categoryName"]
+        name = serializer.validated_data["name"]
+        icon = serializer.validated_data.get("icon")
 
         game = Games.objects.filter(name=game_name).first()
         if game is None:
@@ -60,6 +119,7 @@ class ManageSubCategories(APIView):
                 SubCategoryName=name,
                 PrimalCategory=category,
                 GameName=game,
+                Default_icon=save_game_icon(game_name, icon),
             )
         except IntegrityError:
             return Response(
@@ -73,35 +133,18 @@ class ManageSubCategories(APIView):
         )
 
     def patch(self, request):
-        game_name = (request.data.get("gameName") or "").strip()
-        category_name = (request.data.get("categoryName") or "").strip()
-        name = (request.data.get("name") or "").strip()
-        new_name = (request.data.get("newName") or "").strip()
-        icon = request.FILES.get("icon")
-        clear_icon = str(request.data.get("clearIcon") or "").strip().lower() in (
-            "1",
-            "true",
-            "on",
-            "yes",
-        )
-
-        if not game_name:
+        serializer = RenameSubcategorySerializer(data=request_fields(request))
+        if not serializer.is_valid():
             return Response(
-                {"message": "Game name is required"},
+                {"message": first_error(serializer.errors)},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
-        if not category_name:
-            return Response(
-                {"message": "Category name is required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        if not name or not new_name:
-            return Response(
-                {"message": "Current name and new name are required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        game_name = serializer.validated_data["gameName"]
+        category_name = serializer.validated_data["categoryName"]
+        name = serializer.validated_data["name"]
+        new_name = serializer.validated_data["newName"]
+        icon = serializer.validated_data.get("icon")
+        clear_icon = serializer.validated_data.get("clearIcon")
 
         game = Games.objects.filter(name=game_name).first()
         if game is None:
@@ -137,12 +180,7 @@ class ManageSubCategories(APIView):
         subcategory.SubCategoryName = new_name
         try:
             if icon:
-                filename = str(uuid.uuid4()) + ".png"
-                default_storage.save(
-                    f"{game_name}/icons/{filename}",
-                    icon,
-                )
-                subcategory.Default_icon = filename
+                subcategory.Default_icon = save_game_icon(game_name, icon)
             elif clear_icon:
                 subcategory.Default_icon = None
             subcategory.save()
@@ -157,37 +195,15 @@ class ManageSubCategories(APIView):
         )
 
     def delete(self, request):
-        game_name = (
-            request.data.get("gameName")
-            or request.query_params.get("gameName")
-            or ""
-        ).strip()
-        category_name = (
-            request.data.get("categoryName")
-            or request.query_params.get("categoryName")
-            or ""
-        ).strip()
-        name = (
-            request.data.get("name")
-            or request.query_params.get("name")
-            or ""
-        ).strip()
-
-        if not game_name:
+        serializer = DeleteSubcategorySerializer(data=request_fields(request))
+        if not serializer.is_valid():
             return Response(
-                {"message": "Game name is required"},
+                {"message": first_error(serializer.errors)},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        if not category_name:
-            return Response(
-                {"message": "Category name is required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        if not name:
-            return Response(
-                {"message": "Subcategory name is required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        game_name = serializer.validated_data["gameName"]
+        category_name = serializer.validated_data["categoryName"]
+        name = serializer.validated_data["name"]
 
         game = Games.objects.filter(name=game_name).first()
         if game is None:

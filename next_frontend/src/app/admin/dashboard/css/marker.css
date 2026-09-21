@@ -1,0 +1,122 @@
+.map-marker {
+  position: absolute;
+  z-index: 5;
+  width: 14px;
+  height: 14px;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  background: #3aa0ff;
+  box-shadow: 0 0 0 1px #071018;
+  transform: translate(-50%, -50%) scale(var(--map-icon-scale, 1));
+  transform-origin: center center;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.map-marker::before {
+  content: "";
+  position: absolute;
+  inset: -8px;
+}
+
+.map-marker:hover,
+.map-marker.is-selected {
+  z-index: 6;
+}
+
+.map-marker.is-selected {
+  background: #8fd0ff;
+}
+
+.map-marker.has-icon {
+  width: 16px;
+  height: 16px;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.map-marker.has-icon.is-selected {
+  background: transparent;
+}
+
+.map-marker.is-highlighted {
+  z-index: 7;
+  box-shadow: 0 0 0 4px #7ad0ff, 0 0 0 8px rgba(58, 160, 255, 0.4);
+}
+
+.map-marker.has-icon.is-highlighted {
+  border-radius: 6px;
+  box-shadow: 0 0 0 3px #7ad0ff, 0 0 0 7px rgba(58, 160, 255, 0.45);
+}
+
+.ide-map-stage img.map-marker-icon {
+  display: block;
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  min-height: 16px;
+  max-width: 16px;
+  max-height: 16px;
+  object-fit: fill;
+  image-rendering: auto;
+  pointer-events: none;
+  border: 0;
+}
+
+.map-marker-label {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  z-index: 8;
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 72px;
+  padding: 6px 8px;
+  border: 1px solid #1e3344;
+  border-radius: 8px;
+  background: rgba(12, 24, 34, 0.94);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+  transform: translate(-50%, calc(-100% - 8px));
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.map-marker-label.is-floating {
+  left: 0;
+  top: 0;
+  bottom: auto;
+  display: flex;
+}
+
+.map-marker-label.is-floating[hidden] {
+  display: none;
+}
+
+.map-marker:hover .map-marker-label,
+.map-marker.is-selected .map-marker-label,
+.map-marker.is-highlighted .map-marker-label {
+  display: flex;
+}
+
+.map-marker-subcategory {
+  font-size: 10px;
+  line-height: 1.2;
+  color: #8aa0b3;
+}
+
+.map-marker-name {
+  font-size: 12px;
+  line-height: 1.2;
+  color: #ededed;
+}
+
+.map-marker-coords {
+  margin-top: 2px;
+  font-size: 10px;
+  line-height: 1.2;
+  color: #8aa0b3;
+}

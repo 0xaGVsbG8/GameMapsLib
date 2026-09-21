@@ -17,7 +17,9 @@ export function AddSubcategoryWidget({
 }: AddSubcategoryWidgetProps) {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
   const nameRef = useRef<HTMLInputElement>(null);
+  const iconFileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -35,29 +37,39 @@ export function AddSubcategoryWidget({
   const close = () => {
     setOpen(false);
     setError("");
+    setBusy(false);
+    if (nameRef.current) nameRef.current.value = "";
+    if (iconFileRef.current) iconFileRef.current.value = "";
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const name = nameRef.current?.value.trim();
-    if (!name) return;
+    if (!name || busy) return;
 
     setError("");
+    setBusy(true);
+
+    const formData = new FormData();
+    formData.append("gameName", gameName);
+    formData.append("categoryName", categoryName);
+    formData.append("name", name);
+    const iconFile = iconFileRef.current?.files?.[0] ?? null;
+    if (iconFile) formData.append("icon", iconFile);
 
     const response = await fetch(apiUrl("/blog/ManageSubCategories"), {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify({ gameName, categoryName, name }),
+      body: formData,
     });
 
     if (!response.ok) {
       const data = await response.json().catch(() => null);
       setError(data?.message ?? "Could not add subcategory");
+      setBusy(false);
       return;
     }
 
-    if (nameRef.current) nameRef.current.value = "";
     close();
     onAdded();
   };
@@ -97,13 +109,25 @@ export function AddSubcategoryWidget({
               />
             </div>
 
+            <div className="add-game-field">
+              <label htmlFor={`subcategory-icon-${categoryName}`}>Icon</label>
+              <input
+                ref={iconFileRef}
+                id={`subcategory-icon-${categoryName}`}
+                name="icon"
+                type="file"
+                accept="image/*"
+              />
+              <p className="add-game-hint">Optional. Used as the default icon for markers in this subcategory.</p>
+            </div>
+
             <div className="add-game-error">{error}</div>
 
             <div className="add-game-actions">
               <button className="add-game-cancel" type="button" onClick={close}>
                 Cancel
               </button>
-              <button className="add-game-submit" type="submit">
+              <button className="add-game-submit" type="submit" disabled={busy}>
                 Add
               </button>
             </div>

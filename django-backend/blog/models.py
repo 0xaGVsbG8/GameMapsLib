@@ -7,7 +7,7 @@ import uuid
 class Games(models.Model):
     name = models.CharField(
         max_length=100,
-        primary_key=True
+        unique=True,
     )
     
     public = models.BooleanField(default=False)

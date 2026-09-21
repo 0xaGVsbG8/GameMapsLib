@@ -1,17 +1,67 @@
 from django.core.files.storage import default_storage
 from django.db import IntegrityError
-from rest_framework import status
+from rest_framework import serializers, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from ...authentication import CookieJWTAuthentication
 from ...models import GameMaps, Games
-from ..helpers import (
-    parse_coordinate_fields,
-    scale_stored_image,
-    store_uploaded_image,
-)
+from ..helpers import first_error, request_fields, scale_stored_image, store_uploaded_image
+
+
+class AddMapSerializer(serializers.Serializer):
+    gameName = serializers.CharField(
+        error_messages={
+            "required": "Game name is required",
+            "blank": "Game name is required",
+        },
+    )
+    name = serializers.CharField(
+        error_messages={
+            "required": "Map name is required",
+            "blank": "Map name is required",
+        },
+    )
+    width = serializers.IntegerField(
+        min_value=1,
+        error_messages={
+            "required": "Width and height are required",
+            "invalid": "Width and height are required",
+            "min_value": "Width and height must be positive",
+        },
+    )
+    height = serializers.IntegerField(
+        min_value=1,
+        error_messages={
+            "required": "Width and height are required",
+            "invalid": "Width and height are required",
+            "min_value": "Width and height must be positive",
+        },
+    )
+    image = serializers.ImageField(required=False, allow_null=True)
+    coordinatesFeature = serializers.BooleanField(required=False, default=False)
+    originX = serializers.FloatField(required=False, allow_null=True)
+    originY = serializers.FloatField(required=False, allow_null=True)
+    pixelsPerUnit = serializers.FloatField(required=False, allow_null=True)
+
+    def validate(self, attrs):
+        if not attrs.get("coordinatesFeature"):
+            attrs["originX"] = None
+            attrs["originY"] = None
+            attrs["pixelsPerUnit"] = None
+            return attrs
+        if (
+            attrs.get("originX") is None
+            or attrs.get("originY") is None
+            or attrs.get("pixelsPerUnit") is None
+        ):
+            raise serializers.ValidationError(
+                "Origin X, origin Y, and pixels per unit are required",
+            )
+        if attrs["pixelsPerUnit"] <= 0:
+            raise serializers.ValidationError("Pixels per unit must be positive")
+        return attrs
 
 
 class addMap(APIView):
@@ -19,48 +69,22 @@ class addMap(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        game_name = (request.data.get("gameName") or "").strip()
-        map_name = (request.data.get("name") or "").strip()
-        width_raw = request.data.get("width")
-        height_raw = request.data.get("height")
-        image = request.FILES.get("image")
-
-        if not game_name:
+        serializer = AddMapSerializer(data=request_fields(request))
+        if not serializer.is_valid():
             return Response(
-                {"message": "Game name is required"},
+                {"message": first_error(serializer.errors)},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        if not map_name:
-            return Response(
-                {"message": "Map name is required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        try:
-            width = int(width_raw)
-            height = int(height_raw)
-        except (TypeError, ValueError):
-            return Response(
-                {"message": "Width and height are required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        if width <= 0 or height <= 0:
-            return Response(
-                {"message": "Width and height must be positive"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        use_coords, origin_x, origin_y, pixels_per_unit, coord_error = (
-            parse_coordinate_fields(request.data)
-        )
-        if coord_error:
-            return Response(
-                {"message": coord_error},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
+        game_name = serializer.validated_data["gameName"]
+        map_name = serializer.validated_data["name"]
+        width = serializer.validated_data["width"]
+        height = serializer.validated_data["height"]
+        image = serializer.validated_data.get("image")
+        use_coords = serializer.validated_data["coordinatesFeature"]
+        origin_x = serializer.validated_data["originX"]
+        origin_y = serializer.validated_data["originY"]
+        pixels_per_unit = serializer.validated_data["pixelsPerUnit"]
         coord_kwargs = {
             "coordinates_feature": use_coords,
             "origin_x": origin_x,

@@ -10,5 +10,5 @@ class isUserAuthed(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        print("ure authed")
+        # print("ure authed")
         return Response({})

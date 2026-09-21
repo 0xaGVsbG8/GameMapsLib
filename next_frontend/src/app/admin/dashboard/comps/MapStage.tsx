@@ -11,6 +11,17 @@ const zoom_by = 0.2;
 const min_zoom = 0.25;
 const max_zoom = 12;
 
+function touchDistance(a: Touch, b: Touch) {
+  return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+}
+
+function touchMidpoint(a: Touch, b: Touch) {
+  return {
+    x: (a.clientX + b.clientX) / 2,
+    y: (a.clientY + b.clientY) / 2,
+  };
+}
+
 type MapStageProps = {
   gameInfo: GameInfo | null;
   selectedMap: GameMapInfo | undefined;
@@ -161,7 +172,8 @@ export function MapStage({
 
     const applyTransform = () => {
       const zoom = currentImgzoom.current;
-      const iconNet = Math.min(Math.pow(Math.max(zoom, 0.25), 0.2), 1.3);
+      // Grow with zoom, but slower than the map so icons stay usable at high zoom.
+      const iconNet = Math.pow(Math.max(zoom, min_zoom), 0.7);
       board.style.setProperty("--map-zoom", String(zoom));
       board.style.setProperty("--map-icon-scale", String(iconNet / zoom));
       board.style.transform = `translate(${panRef.current.x}px, ${panRef.current.y}px) scale(${zoom})`;
@@ -169,7 +181,36 @@ export function MapStage({
     };
     applyTransform();
 
+    const zoomToward = (clientX: number, clientY: number, nextZoom: number) => {
+      const oldZoom = currentImgzoom.current;
+      const newZoom = Math.min(max_zoom, Math.max(min_zoom, nextZoom));
+      if (newZoom === oldZoom) return;
+      const rect = board.getBoundingClientRect();
+      const ratio = newZoom / oldZoom;
+      panRef.current = {
+        x: panRef.current.x + (clientX - (rect.left + rect.width / 2)) * (1 - ratio),
+        y: panRef.current.y + (clientY - (rect.top + rect.height / 2)) * (1 - ratio),
+      };
+      currentImgzoom.current = newZoom;
+    };
+
+    let pinch: { lastDist: number; lastMid: { x: number; y: number } } | null =
+      null;
+
+    const beginPinch = (event: TouchEvent) => {
+      const a = event.touches[0];
+      const b = event.touches[1];
+      if (!a || !b) return;
+      isTogglingMouse.current = false;
+      pinch = {
+        lastDist: touchDistance(a, b),
+        lastMid: touchMidpoint(a, b),
+      };
+      board.classList.add("is-panning");
+    };
+
     const onPointerDown = (event: PointerEvent) => {
+      if (event.pointerType === "touch") return;
       if (event.button !== 0) return;
       if ((event.target as HTMLElement | null)?.closest(".map-marker")) return;
       event.preventDefault();
@@ -181,6 +222,7 @@ export function MapStage({
     };
 
     const onPointerMove = (event: PointerEvent) => {
+      if (event.pointerType === "touch") return;
       if (!isTogglingMouse.current) return;
       panRef.current = {
         x: panRef.current.x + event.clientX - lastPointerRef.current.x,
@@ -191,6 +233,7 @@ export function MapStage({
     };
 
     const onPointerUp = (event: PointerEvent) => {
+      if (event.pointerType === "touch") return;
       isTogglingMouse.current = false;
       board.classList.remove("is-panning");
       if (board.hasPointerCapture(event.pointerId)) {
@@ -198,19 +241,85 @@ export function MapStage({
       }
     };
 
+    const onTouchStart = (event: TouchEvent) => {
+      if (
+        event.touches.length === 1 &&
+        (event.target as HTMLElement | null)?.closest(".map-marker")
+      ) {
+        return;
+      }
+      event.preventDefault();
+      if (event.touches.length >= 2) {
+        beginPinch(event);
+        return;
+      }
+      const touch = event.touches[0];
+      if (!touch) return;
+      pinch = null;
+      setSelectedMarkerId(null);
+      isTogglingMouse.current = true;
+      lastPointerRef.current = { x: touch.clientX, y: touch.clientY };
+      board.classList.add("is-panning");
+    };
+
+    const onTouchMove = (event: TouchEvent) => {
+      if (event.touches.length >= 2) {
+        event.preventDefault();
+        const a = event.touches[0];
+        const b = event.touches[1];
+        if (!a || !b) return;
+        if (!pinch) beginPinch(event);
+        if (!pinch || pinch.lastDist < 1) return;
+        const dist = touchDistance(a, b);
+        const mid = touchMidpoint(a, b);
+        zoomToward(mid.x, mid.y, currentImgzoom.current * (dist / pinch.lastDist));
+        panRef.current = {
+          x: panRef.current.x + mid.x - pinch.lastMid.x,
+          y: panRef.current.y + mid.y - pinch.lastMid.y,
+        };
+        pinch.lastDist = dist;
+        pinch.lastMid = mid;
+        applyTransform();
+        return;
+      }
+      if (!isTogglingMouse.current || event.touches.length !== 1) return;
+      event.preventDefault();
+      const touch = event.touches[0];
+      if (!touch) return;
+      panRef.current = {
+        x: panRef.current.x + touch.clientX - lastPointerRef.current.x,
+        y: panRef.current.y + touch.clientY - lastPointerRef.current.y,
+      };
+      lastPointerRef.current = { x: touch.clientX, y: touch.clientY };
+      applyTransform();
+    };
+
+    const onTouchEnd = (event: TouchEvent) => {
+      if (event.touches.length >= 2) {
+        beginPinch(event);
+        return;
+      }
+      if (event.touches.length === 1) {
+        const touch = event.touches[0];
+        pinch = null;
+        isTogglingMouse.current = true;
+        if (touch) {
+          lastPointerRef.current = { x: touch.clientX, y: touch.clientY };
+        }
+        return;
+      }
+      pinch = null;
+      isTogglingMouse.current = false;
+      board.classList.remove("is-panning");
+    };
+
     const onWheel = (event: WheelEvent) => {
       event.preventDefault();
-      const oldZoom = currentImgzoom.current;
-      const nextZoom = event.deltaY < 0 ? oldZoom + zoom_by : oldZoom - zoom_by;
-      const newZoom = Math.min(max_zoom, Math.max(min_zoom, nextZoom));
-      if (newZoom === oldZoom) return;
-      const rect = board.getBoundingClientRect();
-      const ratio = newZoom / oldZoom;
-      panRef.current = {
-        x: panRef.current.x + (event.clientX - (rect.left + rect.width / 2)) * (1 - ratio),
-        y: panRef.current.y + (event.clientY - (rect.top + rect.height / 2)) * (1 - ratio),
-      };
-      currentImgzoom.current = newZoom;
+      const nextZoom =
+        event.deltaY < 0
+          ? currentImgzoom.current + zoom_by
+          : currentImgzoom.current - zoom_by;
+      zoomToward(event.clientX, event.clientY, nextZoom);
       applyTransform();
     };
 
@@ -222,6 +331,10 @@ export function MapStage({
     board.addEventListener("pointermove", onPointerMove);
     board.addEventListener("pointerup", onPointerUp);
     board.addEventListener("pointercancel", onPointerUp);
+    board.addEventListener("touchstart", onTouchStart, { passive: false });
+    board.addEventListener("touchmove", onTouchMove, { passive: false });
+    board.addEventListener("touchend", onTouchEnd);
+    board.addEventListener("touchcancel", onTouchEnd);
     board.addEventListener("wheel", onWheel, { passive: false });
     board.addEventListener("dragstart", onDragStart);
     return () => {
@@ -231,6 +344,10 @@ export function MapStage({
       board.removeEventListener("pointermove", onPointerMove);
       board.removeEventListener("pointerup", onPointerUp);
       board.removeEventListener("pointercancel", onPointerUp);
+      board.removeEventListener("touchstart", onTouchStart);
+      board.removeEventListener("touchmove", onTouchMove);
+      board.removeEventListener("touchend", onTouchEnd);
+      board.removeEventListener("touchcancel", onTouchEnd);
       board.removeEventListener("wheel", onWheel);
       board.removeEventListener("dragstart", onDragStart);
     };
@@ -340,6 +457,9 @@ export function MapStage({
               {infoMarker?.subcategoryName}
             </span>
             <span className="map-marker-name">{infoMarker?.name}</span>
+            <span className="map-marker-coords">
+              X {infoMarker?.mapX ?? "—"} · Y {infoMarker?.mapY ?? "—"}
+            </span>
           </div>
           <div className="map-coord-widget">
             <span>

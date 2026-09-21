@@ -14,6 +14,21 @@
   background: #ffffff;
 }
 
+.add-game-button.compact {
+  padding: 3px 8px;
+  border: 1px solid #2a4256;
+  border-radius: 4px;
+  background: transparent;
+  color: #c5d4e0;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.add-game-button.compact:hover {
+  background: #122433;
+  color: #ffffff;
+}
+
 .add-game-overlay {
   position: fixed;
   inset: 0;

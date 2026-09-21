@@ -1,11 +1,114 @@
-from rest_framework import status
+from rest_framework import serializers, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from ...authentication import CookieJWTAuthentication
 from ...models import Games, Items, ItemsCategories, ItemsSubCategories
-from ..helpers import save_game_icon
+from ..helpers import first_error, request_fields, save_game_icon
+
+
+class CreateItemSerializer(serializers.Serializer):
+    gameName = serializers.CharField(
+        error_messages={
+            "required": "Game name is required",
+            "blank": "Game name is required",
+        },
+    )
+    name = serializers.CharField(
+        error_messages={
+            "required": "Marker name is required",
+            "blank": "Marker name is required",
+        },
+    )
+    categoryName = serializers.CharField(
+        error_messages={
+            "required": "Category and subcategory are required",
+            "blank": "Category and subcategory are required",
+        },
+    )
+    subcategoryName = serializers.CharField(
+        error_messages={
+            "required": "Category and subcategory are required",
+            "blank": "Category and subcategory are required",
+        },
+    )
+    x = serializers.FloatField(
+        error_messages={
+            "required": "X and Y are required",
+            "invalid": "X and Y are required",
+        },
+    )
+    y = serializers.FloatField(
+        error_messages={
+            "required": "X and Y are required",
+            "invalid": "X and Y are required",
+        },
+    )
+    icon = serializers.ImageField(required=False, allow_null=True)
+
+    def validate_x(self, value):
+        return int(round(value))
+
+    def validate_y(self, value):
+        return int(round(value))
+
+
+class UpdateItemSerializer(serializers.Serializer):
+    gameName = serializers.CharField(
+        error_messages={
+            "required": "Game name is required",
+            "blank": "Game name is required",
+        },
+    )
+    newName = serializers.CharField(
+        error_messages={
+            "required": "Marker name is required",
+            "blank": "Marker name is required",
+        },
+    )
+    id = serializers.IntegerField(
+        error_messages={
+            "required": "Item id is required",
+            "invalid": "Item id is required",
+        },
+    )
+    x = serializers.FloatField(required=False, allow_null=True)
+    y = serializers.FloatField(required=False, allow_null=True)
+    icon = serializers.ImageField(required=False, allow_null=True)
+    clearIcon = serializers.BooleanField(required=False, default=False)
+
+    def to_internal_value(self, data):
+        data = data.copy()
+        for key in ("x", "y"):
+            if data.get(key) == "":
+                data.pop(key, None)
+        return super().to_internal_value(data)
+
+    def validate_x(self, value):
+        if value is None:
+            return value
+        return int(round(value))
+
+    def validate_y(self, value):
+        if value is None:
+            return value
+        return int(round(value))
+
+
+class DeleteItemSerializer(serializers.Serializer):
+    gameName = serializers.CharField(
+        error_messages={
+            "required": "Game name is required",
+            "blank": "Game name is required",
+        },
+    )
+    id = serializers.IntegerField(
+        error_messages={
+            "required": "Item id is required",
+            "invalid": "Item id is required",
+        },
+    )
 
 
 class ManageItems(APIView):
@@ -13,35 +116,19 @@ class ManageItems(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        game_name = (request.data.get("gameName") or "").strip()
-        name = (request.data.get("name") or "").strip()
-        category_name = (request.data.get("categoryName") or "").strip()
-        subcategory_name = (request.data.get("subcategoryName") or "").strip()
-
-        if not game_name:
+        serializer = CreateItemSerializer(data=request_fields(request))
+        if not serializer.is_valid():
             return Response(
-                {"message": "Game name is required"},
+                {"message": first_error(serializer.errors)},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        if not name:
-            return Response(
-                {"message": "Marker name is required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        if not category_name or not subcategory_name:
-            return Response(
-                {"message": "Category and subcategory are required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        try:
-            x_location = int(round(float(request.data.get("x"))))
-            y_location = int(round(float(request.data.get("y"))))
-        except (TypeError, ValueError):
-            return Response(
-                {"message": "X and Y are required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        game_name = serializer.validated_data["gameName"]
+        name = serializer.validated_data["name"]
+        category_name = serializer.validated_data["categoryName"]
+        subcategory_name = serializer.validated_data["subcategoryName"]
+        x_location = serializer.validated_data["x"]
+        y_location = serializer.validated_data["y"]
+        icon_file = serializer.validated_data.get("icon")
 
         game = Games.objects.filter(name=game_name).first()
         if game is None:
@@ -71,7 +158,6 @@ class ManageItems(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        icon_file = request.FILES.get("icon")
         icon_name = save_game_icon(game_name, icon_file)
 
         item = Items.objects.create(
@@ -97,27 +183,17 @@ class ManageItems(APIView):
         )
 
     def patch(self, request):
-        game_name = (request.data.get("gameName") or "").strip()
-        new_name = (request.data.get("newName") or "").strip()
-        item_id = request.data.get("id")
-
-        if not game_name:
+        serializer = UpdateItemSerializer(data=request_fields(request))
+        if not serializer.is_valid():
             return Response(
-                {"message": "Game name is required"},
+                {"message": first_error(serializer.errors)},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        if not new_name:
-            return Response(
-                {"message": "Marker name is required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        try:
-            item_id = int(item_id)
-        except (TypeError, ValueError):
-            return Response(
-                {"message": "Item id is required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        game_name = serializer.validated_data["gameName"]
+        new_name = serializer.validated_data["newName"]
+        item_id = serializer.validated_data["id"]
+        icon_file = serializer.validated_data.get("icon")
+        clear_icon = serializer.validated_data.get("clearIcon")
 
         game = Games.objects.filter(name=game_name).first()
         if game is None:
@@ -138,38 +214,17 @@ class ManageItems(APIView):
             item.ItemName = new_name
             update_fields.append("ItemName")
 
-        x_raw = request.data.get("x", None)
-        y_raw = request.data.get("y", None)
-        if x_raw is not None and x_raw != "":
-            try:
-                x_location = int(round(float(x_raw)))
-            except (TypeError, ValueError):
-                return Response(
-                    {"message": "X must be a number"},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+        if "x" in serializer.validated_data and serializer.validated_data["x"] is not None:
+            x_location = serializer.validated_data["x"]
             if item.x_location != x_location:
                 item.x_location = x_location
                 update_fields.append("x_location")
-        if y_raw is not None and y_raw != "":
-            try:
-                y_location = int(round(float(y_raw)))
-            except (TypeError, ValueError):
-                return Response(
-                    {"message": "Y must be a number"},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+        if "y" in serializer.validated_data and serializer.validated_data["y"] is not None:
+            y_location = serializer.validated_data["y"]
             if item.y_location != y_location:
                 item.y_location = y_location
                 update_fields.append("y_location")
 
-        icon_file = request.FILES.get("icon")
-        clear_icon = str(request.data.get("clearIcon") or "").strip().lower() in (
-            "1",
-            "true",
-            "on",
-            "yes",
-        )
         if icon_file:
             icon_name = save_game_icon(game_name, icon_file)
             if icon_name:
@@ -191,25 +246,14 @@ class ManageItems(APIView):
         })
 
     def delete(self, request):
-        game_name = (
-            request.data.get("gameName")
-            or request.query_params.get("gameName")
-            or ""
-        ).strip()
-        item_id = request.data.get("id") or request.query_params.get("id")
-
-        if not game_name:
+        serializer = DeleteItemSerializer(data=request_fields(request))
+        if not serializer.is_valid():
             return Response(
-                {"message": "Game name is required"},
+                {"message": first_error(serializer.errors)},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        try:
-            item_id = int(item_id)
-        except (TypeError, ValueError):
-            return Response(
-                {"message": "Item id is required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        game_name = serializer.validated_data["gameName"]
+        item_id = serializer.validated_data["id"]
 
         game = Games.objects.filter(name=game_name).first()
         if game is None:

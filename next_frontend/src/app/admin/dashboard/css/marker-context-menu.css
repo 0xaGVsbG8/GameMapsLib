@@ -1,0 +1,35 @@
+.marker-context-menu {
+  position: fixed;
+  z-index: 40;
+  min-width: 148px;
+  padding: 4px;
+  border: 1px solid #1e3344;
+  border-radius: 8px;
+  background: #0c1822;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+
+.marker-context-menu button {
+  width: 100%;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #ededed;
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.marker-context-menu button:hover {
+  background: #1a3f56;
+}
+
+.marker-context-menu button.danger {
+  color: #f0a0a0;
+}
+
+.marker-context-menu button.danger:hover {
+  background: #2a1216;
+}

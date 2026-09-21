@@ -1,0 +1,181 @@
+.ide-shell {
+  display: flex;
+  height: 100dvh;
+  overflow: hidden;
+  background: #071018;
+  color: #cccccc;
+}
+
+.ide-workspace {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: #071018;
+}
+
+.ide-tabbar {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  min-height: 36px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 2;
+  padding-left: 28px;
+  background: #0a1218;
+  border-bottom: 1px solid #1e3344;
+}
+
+.ide-tab {
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  border-right: 1px solid #1e3344;
+  background: #071018;
+  color: #ededed;
+  font-size: 13px;
+}
+
+.ide-tabbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+}
+
+.ide-tabbar-actions .add-game-button.compact {
+  text-decoration: none;
+}
+
+.ide-workspace-body {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+}
+
+.ide-editor {
+  flex: 1;
+  overflow: auto;
+  padding: 20px 24px 32px;
+}
+
+.ide-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #5d7386;
+}
+
+.ide-empty strong {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #8aa0b3;
+}
+
+.ide-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  width: min(720px, 100%);
+  margin-top: 20px;
+}
+
+.ide-overview-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px 18px;
+  border: 1px solid #1e3344;
+  border-radius: 10px;
+  background: #0c1520;
+}
+
+.ide-overview-value {
+  font-size: 1.7rem;
+  font-weight: 700;
+  line-height: 1;
+  color: #dce8f2;
+}
+
+.ide-overview-label {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6f8496;
+}
+
+.ide-file-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 20px;
+}
+
+.ide-file-item {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 8px 12px;
+  border-radius: 4px;
+  color: #c5d4e0;
+  font-size: 13px;
+}
+
+.ide-file-item:hover {
+  background: #122433;
+}
+
+.ide-file-name {
+  color: #ededed;
+}
+
+.ide-file-meta {
+  color: #8aa0b3;
+  font-size: 12px;
+}
+
+.ide-panel-backdrop {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .ide-tabbar {
+    flex-wrap: wrap;
+    min-height: unset;
+    gap: 0;
+  }
+
+  .ide-tab {
+    flex: 1;
+    min-width: 0;
+    border-right: 0;
+    padding: 8px 12px;
+  }
+
+  .ide-tabbar-actions {
+    width: 100%;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    padding: 6px 8px 8px;
+  }
+
+  .ide-shell.is-games-open .ide-panel-backdrop,
+  .ide-shell.is-categories-open .ide-panel-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 25;
+    border: 0;
+    padding: 0;
+    background: rgba(4, 10, 16, 0.55);
+    cursor: pointer;
+  }
+}

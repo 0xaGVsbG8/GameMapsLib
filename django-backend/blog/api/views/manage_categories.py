@@ -1,11 +1,63 @@
 from django.db import IntegrityError
-from rest_framework import status
+from rest_framework import serializers, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from ...authentication import CookieJWTAuthentication
 from ...models import Games, ItemsCategories
+from ..helpers import first_error, request_fields
+
+
+class CreateCategorySerializer(serializers.Serializer):
+    gameName = serializers.CharField(
+        error_messages={
+            "required": "Game name is required",
+            "blank": "Game name is required",
+        },
+    )
+    name = serializers.CharField(
+        error_messages={
+            "required": "Category name is required",
+            "blank": "Category name is required",
+        },
+    )
+
+
+class RenameCategorySerializer(serializers.Serializer):
+    gameName = serializers.CharField(
+        error_messages={
+            "required": "Game name is required",
+            "blank": "Game name is required",
+        },
+    )
+    name = serializers.CharField(
+        error_messages={
+            "required": "Current name and new name are required",
+            "blank": "Current name and new name are required",
+        },
+    )
+    newName = serializers.CharField(
+        error_messages={
+            "required": "Current name and new name are required",
+            "blank": "Current name and new name are required",
+        },
+    )
+
+
+class DeleteCategorySerializer(serializers.Serializer):
+    gameName = serializers.CharField(
+        error_messages={
+            "required": "Game name is required",
+            "blank": "Game name is required",
+        },
+    )
+    name = serializers.CharField(
+        error_messages={
+            "required": "Category name is required",
+            "blank": "Category name is required",
+        },
+    )
 
 
 class ManageCategories(APIView):
@@ -13,20 +65,14 @@ class ManageCategories(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        game_name = (request.data.get("gameName") or "").strip()
-        name = (request.data.get("name") or "").strip()
-
-        if not game_name:
+        serializer = CreateCategorySerializer(data=request_fields(request))
+        if not serializer.is_valid():
             return Response(
-                {"message": "Game name is required"},
+                {"message": first_error(serializer.errors)},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
-        if not name:
-            return Response(
-                {"message": "Category name is required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        game_name = serializer.validated_data["gameName"]
+        name = serializer.validated_data["name"]
 
         game = Games.objects.filter(name=game_name).first()
         if game is None:
@@ -46,21 +92,15 @@ class ManageCategories(APIView):
         return Response({"name": name}, status=status.HTTP_201_CREATED)
 
     def patch(self, request):
-        game_name = (request.data.get("gameName") or "").strip()
-        name = (request.data.get("name") or "").strip()
-        new_name = (request.data.get("newName") or "").strip()
-
-        if not game_name:
+        serializer = RenameCategorySerializer(data=request_fields(request))
+        if not serializer.is_valid():
             return Response(
-                {"message": "Game name is required"},
+                {"message": first_error(serializer.errors)},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
-        if not name or not new_name:
-            return Response(
-                {"message": "Current name and new name are required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        game_name = serializer.validated_data["gameName"]
+        name = serializer.validated_data["name"]
+        new_name = serializer.validated_data["newName"]
 
         game = Games.objects.filter(name=game_name).first()
         if game is None:
@@ -94,27 +134,14 @@ class ManageCategories(APIView):
         return Response({"name": new_name, "oldName": name})
 
     def delete(self, request):
-        game_name = (
-            request.data.get("gameName")
-            or request.query_params.get("gameName")
-            or ""
-        ).strip()
-        name = (
-            request.data.get("name")
-            or request.query_params.get("name")
-            or ""
-        ).strip()
-
-        if not game_name:
+        serializer = DeleteCategorySerializer(data=request_fields(request))
+        if not serializer.is_valid():
             return Response(
-                {"message": "Game name is required"},
+                {"message": first_error(serializer.errors)},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        if not name:
-            return Response(
-                {"message": "Category name is required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        game_name = serializer.validated_data["gameName"]
+        name = serializer.validated_data["name"]
 
         game = Games.objects.filter(name=game_name).first()
         if game is None:
