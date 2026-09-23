@@ -29,9 +29,9 @@ services:
   nginx:
     image: nginx:alpine
     ports:
-      - "8322:80"
+      - "8322:8322"
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./NGINX/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./django-backend/media:/data/media:ro
     depends_on:
       - django
