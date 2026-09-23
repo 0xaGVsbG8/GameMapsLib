@@ -11,11 +11,15 @@ services:
     restart: unless-stopped
 
   next:
-    build: ./next_frontend
+    build:
+      context: ./next_frontend
+      args:
+        NEXT_PUBLIC_BASE_PATH: /GameMapsLib
     expose:
       - "3000"
     environment:
       INTERNAL_API_URL: http://django:8000
+      NEXT_PUBLIC_BASE_PATH: /GameMapsLib
       HOSTNAME: 0.0.0.0
       PORT: 3000
     depends_on:

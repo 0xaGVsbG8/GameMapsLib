@@ -12,15 +12,16 @@ The stack is **Next.js** (UI), **Django REST Framework** (API + auth), **SQLite*
 - Place, move, and edit markers on the map (click to add, right-click to edit).
 - Pan, mouse-wheel zoom, and pinch-zoom on touch devices like phones.
 - Filter categories/subcategories on the public map (unchecked items are dimmed).
-- Publish or hide a game. `/home` never lists private games.
+- Publish or hide a game. `/GameMapsLib/home` never lists private games.
 
 ## Architecture
 
 ```
-Browser  →  nginx :80
-              ├─ /blog/*     → Django :8000
-              ├─ /media/*    → django-backend/media (files on disk)
-              └─ /*          → Next.js :3000
+Browser  →  nginx :8322
+              ├─ /GameMapsLib/blog/*   → Django :8000 /blog/
+              ├─ /GameMapsLib/media/*  → django-backend/media
+              ├─ /GameMapsLib/*        → Next.js :3000
+              └─ /                       → 301 /GameMapsLib/
 ```
 
 Django and Next are not published on the host. Only nginx is, meaning when the app is launched by docker it only takes up a single port instead of for every service.
@@ -85,18 +86,20 @@ The browser loads them as `/media/<Game name>/icons/...` and `/media/<Game name>
 
 ## Pages
 
-| URL                 | Who        | Behavior |
-|---------------------|------------|----------|
-| `/`                 | everyone   | Redirects to `/home` |
-| `/home`             | everyone   | Public map explorer (no login). Only public games. |
-| `/admin/login`      | staff      | Username/password. Sets httpOnly JWT cookies. |
-| `/admin/dashboard`  | staff      | Full editor: games, maps, categories, markers. |
+| URL | Who | Behavior |
+|-----|-----|----------|
+| `/` | everyone | Redirects to `/GameMapsLib/` |
+| `/GameMapsLib/home` | everyone | Public map explorer (no login). Only public games. |
+| `/GameMapsLib/admin/login` | staff | Username/password. Sets httpOnly JWT cookies. |
+| `/GameMapsLib/admin/dashboard` | staff | Full editor: games, maps, categories, markers. |
 
-`MapExplorer` is shared. On `/home` it is `readOnly`: public list/info endpoints, no create/edit UI, and private games are not requested.
+`MapExplorer` is shared. On `/GameMapsLib/home` it is `readOnly`: public list/info endpoints, no create/edit UI, and private games are not requested.
+
+Local `npm run dev` (port 3000) has no prefix: `/home`, `/admin/...`, and Django on `:8000/blog`.
 
 ## API (`/blog/...`)
 
-Cookie JWT (`access_token`) is required except where noted. Login must be a Django **staff** user.
+Through nginx the browser calls `/GameMapsLib/blog/...`; nginx strips the prefix so Django still sees `/blog/...`. Cookie JWT (`access_token`) is required except where noted. Login must be a Django **staff** user.
 
 | Method | Path | Auth | Purpose |
 |--------|------|------|---------|

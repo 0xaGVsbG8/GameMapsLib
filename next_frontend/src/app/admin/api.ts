@@ -1,3 +1,7 @@
+import { basePath } from "../base-path";
+
+export { basePath };
+
 export function apiUrl(path: string) {
   const normalized = path.startsWith("/") ? path : `/${path}`;
 
@@ -12,10 +16,10 @@ export function apiUrl(path: string) {
   }
 
   // Direct Next dev server still talks to Django on 8000.
-  // Behind nginx (port 80/8080/443) the browser uses the same origin.
+  // Behind nginx the browser stays on the same origin, including any app prefix.
   if (window.location.port === "3000") {
     return `http://${window.location.hostname}:8000${normalized}`;
   }
 
-  return normalized;
+  return `${basePath}${normalized}`;
 }

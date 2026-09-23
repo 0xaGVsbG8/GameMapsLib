@@ -6,6 +6,9 @@ ENV NEXT_TELEMETRY_DISABLED=1
 COPY package.json package-lock.json ./
 RUN npm ci
 
+ARG NEXT_PUBLIC_BASE_PATH=/GameMapsLib
+ENV NEXT_PUBLIC_BASE_PATH=$NEXT_PUBLIC_BASE_PATH
+
 COPY . .
 RUN npm run build
 

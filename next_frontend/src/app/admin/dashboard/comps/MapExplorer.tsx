@@ -8,7 +8,7 @@ import { EditMarkerWidget, MarkerEdit } from "./EditMarkerWidget";
 import { GameSidebar } from "./GameSidebar";
 import { MapStage } from "./MapStage";
 import { GameInfo, OverviewStats, info_type } from "../types";
-import { apiUrl } from "../../api";
+import { apiUrl, basePath } from "../../api";
 import "../css/add-game.css";
 import "../css/dashboard.css";
 import "../css/MapExplorer.css";
@@ -348,7 +348,7 @@ export function MapExplorer({ readOnly = false }: MapExplorerProps) {
                   >
                     {gameInfo?.public ? "Private map" : "Publish"}
                   </button>
-                  <a className="add-game-button compact" href="/home" target="blank" rel="noopener noreferrer">
+                  <a className="add-game-button compact" href={`${basePath}/home`} target="blank" rel="noopener noreferrer">
                     Client view
                   </a>
                 </div>
