@@ -6,43 +6,30 @@ def _table_columns(cursor, table):
     return {row[1] for row in cursor.fetchall()}
 
 
-def _restore_sequence(cursor, table):
-    cursor.execute(f'SELECT MAX("id") FROM "{table}"')
-    max_id = cursor.fetchone()[0] or 0
-    cursor.execute("DELETE FROM sqlite_sequence WHERE name = ?", (table,))
-    if max_id:
-        cursor.execute(
-            "INSERT INTO sqlite_sequence(name, seq) VALUES (?, ?)",
-            (table, max_id),
-        )
-
-
 def remap_games_primary_key(apps, schema_editor):
     if schema_editor.connection.vendor != "sqlite":
         raise NotImplementedError("Games PK remap is written for SQLite only")
 
     with schema_editor.connection.cursor() as cursor:
-        if "id" in _table_columns(cursor, "blog_games"):
-            return
-
         cursor.execute("PRAGMA foreign_keys = OFF")
 
-        cursor.execute(
-            """
-            CREATE TABLE "blog_games_new" (
-                "id" integer NOT NULL PRIMARY KEY AUTOINCREMENT,
-                "name" varchar(100) NOT NULL UNIQUE,
-                "public" bool NOT NULL
+        if "id" not in _table_columns(cursor, "blog_games"):
+            cursor.execute('DROP TABLE IF EXISTS "blog_games_new"')
+            cursor.execute(
+                """
+                CREATE TABLE "blog_games_new" (
+                    "id" integer NOT NULL PRIMARY KEY AUTOINCREMENT,
+                    "name" varchar(100) NOT NULL UNIQUE,
+                    "public" bool NOT NULL
+                )
+                """
             )
-            """
-        )
-        cursor.execute(
-            'INSERT INTO "blog_games_new" ("name", "public") '
-            'SELECT "name", "public" FROM "blog_games"'
-        )
-        cursor.execute("DROP TABLE \"blog_games\"")
-        cursor.execute('ALTER TABLE "blog_games_new" RENAME TO "blog_games"')
-        _restore_sequence(cursor, "blog_games")
+            cursor.execute(
+                'INSERT INTO "blog_games_new" ("name", "public") '
+                'SELECT "name", "public" FROM "blog_games"'
+            )
+            cursor.execute('DROP TABLE "blog_games"')
+            cursor.execute('ALTER TABLE "blog_games_new" RENAME TO "blog_games"')
 
         cursor.execute(
             """
@@ -70,7 +57,6 @@ def remap_games_primary_key(apps, schema_editor):
             'CREATE INDEX "blog_itemscategories_GameName_id_364abda7" '
             'ON "blog_itemscategories" ("GameName_id")'
         )
-        _restore_sequence(cursor, "blog_itemscategories")
 
         cursor.execute(
             """
@@ -105,7 +91,6 @@ def remap_games_primary_key(apps, schema_editor):
             'CREATE INDEX "blog_itemssubcategories_PrimalCategory_id_8b87e301" '
             'ON "blog_itemssubcategories" ("PrimalCategory_id")'
         )
-        _restore_sequence(cursor, "blog_itemssubcategories")
 
         cursor.execute(
             """
@@ -182,7 +167,6 @@ def remap_games_primary_key(apps, schema_editor):
             'CREATE INDEX "blog_items_SubCategoryName_id_1e0bce3a" '
             'ON "blog_items" ("SubCategoryName_id")'
         )
-        _restore_sequence(cursor, "blog_items")
 
         cursor.execute("PRAGMA foreign_keys = ON")
 
@@ -223,7 +207,6 @@ def unremap_games_primary_key(apps, schema_editor):
             'CREATE INDEX "blog_itemscategories_GameName_id_364abda7" '
             'ON "blog_itemscategories" ("GameName_id")'
         )
-        _restore_sequence(cursor, "blog_itemscategories")
 
         cursor.execute(
             """
@@ -258,7 +241,6 @@ def unremap_games_primary_key(apps, schema_editor):
             'CREATE INDEX "blog_itemssubcategories_PrimalCategory_id_8b87e301" '
             'ON "blog_itemssubcategories" ("PrimalCategory_id")'
         )
-        _restore_sequence(cursor, "blog_itemssubcategories")
 
         cursor.execute(
             """
@@ -335,7 +317,6 @@ def unremap_games_primary_key(apps, schema_editor):
             'CREATE INDEX "blog_items_SubCategoryName_id_1e0bce3a" '
             'ON "blog_items" ("SubCategoryName_id")'
         )
-        _restore_sequence(cursor, "blog_items")
 
         cursor.execute(
             """

@@ -2,7 +2,9 @@
 
 import { AddGameWidget } from "./AddGameWidget";
 import { EditNameWidget } from "./EditNameWidget";
-import { apiUrl } from "../api";
+import { apiUrl } from "../../api";
+import "../css/GameSidebar.css";
+import "../css/sidebar-shared.css";
 
 type GameSidebarProps = {
   games: string[];

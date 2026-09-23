@@ -1,6 +1,8 @@
 'use client'
 
-import { apiUrl } from "../api";
+import { apiUrl } from "../../api";
+import "../css/marker.css";
+import "../css/marker-context-menu.css";
 export type MarkerEditClick = {
     screenX: number
     screenY: number

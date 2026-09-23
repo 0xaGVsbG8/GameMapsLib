@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { apiUrl } from "../api";
-import "./add-game.css";
-import type { GameCategory } from "./types";
+import { apiUrl } from "../../api";
+import "../css/add-game.css";
+import type { GameCategory } from "../types";
 
 export type MarkerClick = {
   screenX: number;

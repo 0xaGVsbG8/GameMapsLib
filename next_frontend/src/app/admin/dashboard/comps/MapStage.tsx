@@ -3,9 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import { MarkerClick } from "./AddMarkerWidget";
 import { MarkerEdit } from "./EditMarkerWidget";
-import { calc_marker, getGameItems, getMapPoint } from "./mapCoords";
+import { calc_marker, getGameItems, getMapPoint } from "../mapCoords";
 import Marker from "./marker";
-import { GameInfo, GameMapInfo } from "./types";
+import { GameInfo, GameMapInfo } from "../types";
+import "../css/MapStage.css";
 
 const zoom_by = 0.2;
 const min_zoom = 0.25;

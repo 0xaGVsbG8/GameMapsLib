@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { sanitizeCoord } from "./mapCoords";
-import { apiUrl } from "../api";
-import "./add-game.css";
+import { sanitizeCoord } from "../mapCoords";
+import { apiUrl } from "../../api";
+import "../css/add-game.css";
 
 export type MarkerEdit = {
   id: number;

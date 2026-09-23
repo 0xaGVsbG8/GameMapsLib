@@ -6,9 +6,11 @@ import { AddItemWidget } from "./AddItemWidget";
 import { AddSubcategoryWidget } from "./AddSubcategoryWidget";
 import { EditMarkerWidget } from "./EditMarkerWidget";
 import { EditNameWidget } from "./EditNameWidget";
-import { GameCategory, GameItem } from "./types";
-import { apiUrl } from "../api";
-import "./add-game.css";
+import { GameCategory, GameItem } from "../types";
+import { apiUrl } from "../../api";
+import "../css/add-game.css";
+import "../css/CategorySidebar.css";
+import "../css/sidebar-shared.css";
 
 type CategorySidebarProps = {
   gameName: string;

@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { apiUrl } from "../api";
-import "./add-game.css";
-import type { GameMapInfo } from "./types";
+import { apiUrl } from "../../api";
+import "../css/add-game.css";
+import type { GameMapInfo } from "../types";
 
 type AddMapWidgetProps = {
   gameName: string;

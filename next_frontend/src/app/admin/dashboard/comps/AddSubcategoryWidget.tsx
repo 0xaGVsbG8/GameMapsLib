@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { apiUrl } from "../api";
-import "./add-game.css";
+import { apiUrl } from "../../api";
+import "../css/add-game.css";
 
 type AddSubcategoryWidgetProps = {
   gameName: string;

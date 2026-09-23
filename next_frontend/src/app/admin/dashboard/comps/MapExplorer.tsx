@@ -7,10 +7,11 @@ import { DeleteGameWidget } from "./DeleteGameWidget";
 import { EditMarkerWidget, MarkerEdit } from "./EditMarkerWidget";
 import { GameSidebar } from "./GameSidebar";
 import { MapStage } from "./MapStage";
-import { GameInfo, OverviewStats, info_type } from "./types";
-import { apiUrl } from "../api";
-import "./add-game.css";
-import "./dashboard.css";
+import { GameInfo, OverviewStats, info_type } from "../types";
+import { apiUrl } from "../../api";
+import "../css/add-game.css";
+import "../css/dashboard.css";
+import "../css/MapExplorer.css";
 
 type MapExplorerProps = {
   readOnly?: boolean;
@@ -247,7 +248,7 @@ export function MapExplorer({ readOnly = false }: MapExplorerProps) {
   const selectedMap =
     gameInfo?.maps.find((map) => map.image_path) ?? gameInfo?.maps[0]
   const mapSrc = selectedMap?.image_path
-    ? selectedMap.image_url || apiUrl(`/media/${selectedMap.image_path}`)
+    ? apiUrl(`/media/${selectedMap.image_path}`)
     : ""
 
   const stats = data?.stats

@@ -7,7 +7,7 @@ services:
       ALLOWED_HOSTS: "*"
       DATA_DIR: /data
     volumes:
-      - django_data:/data
+      - ./django-backend:/data
     restart: unless-stopped
 
   next:
@@ -25,14 +25,11 @@ services:
   nginx:
     image: nginx:alpine
     ports:
-      - "80:80"
+      - "8322:80"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - django_data:/data:ro
+      - ./django-backend/media:/data/media:ro
     depends_on:
       - django
       - next
     restart: unless-stopped
-
-volumes:
-  django_data:

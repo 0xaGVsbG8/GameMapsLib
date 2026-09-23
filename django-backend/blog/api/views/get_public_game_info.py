@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from ...models import Games
+from ..helpers import coalesce_game_media
 from ..serializers import GameInfoSerializer
 from .get_game_info import build_game_info, game_info_queryset
 
@@ -17,11 +18,12 @@ class getPublicGameInfo(APIView):
         serializer.is_valid(raise_exception=True)
 
         GAMENAME = serializer.validated_data["GameName"]
-        game = game_info_queryset().filter(name=GAMENAME, public=True).first()
-        if game is None:
+        if not Games.objects.filter(name=GAMENAME, public=True).exists():
             return Response(
                 {"message": "Game not found"},
                 status=status.HTTP_404_NOT_FOUND,
             )
 
+        coalesce_game_media(GAMENAME)
+        game = game_info_queryset().filter(name=GAMENAME, public=True).first()
         return Response(build_game_info(request, game))

@@ -17,7 +17,8 @@ def save_game_icon(game_name, icon):
     if not icon:
         return None
     filename = str(uuid.uuid4()) + ".png"
-    default_storage.save(f"{game_name}/icons/{filename}", icon)
+    ensure_game_media(game_name)
+    default_storage.save(f"{game_folder(game_name)}/icons/{filename}", icon)
     return filename
 
 
@@ -48,6 +49,13 @@ def request_fields(request):
 
 
 def game_folder(game_name):
+    folder = (game_name or "").strip()
+    if (not folder) or folder in (".", "..") or "/" in folder or "\\" in folder:
+        return "game"
+    return folder
+
+
+def _legacy_game_folder(game_name):
     folder = get_valid_filename((game_name or "").strip())
     return folder or "game"
 
@@ -56,26 +64,84 @@ def game_maps_prefix(game_name):
     return f"{game_folder(game_name)}/maps"
 
 
+def _merge_dir(src, dest):
+    if not src.is_dir() or src.resolve() == dest.resolve():
+        return
+    dest.mkdir(parents=True, exist_ok=True)
+    for item in src.iterdir():
+        target = dest / item.name
+        if item.is_dir():
+            _merge_dir(item, target)
+            continue
+        if not target.exists():
+            shutil.move(str(item), str(target))
+    shutil.rmtree(src, ignore_errors=True)
+
+
+def coalesce_game_media(game_name):
+    root = Path(settings.MEDIA_ROOT)
+    canonical = game_folder(game_name)
+    dest = root / canonical
+    (dest / "maps").mkdir(parents=True, exist_ok=True)
+    (dest / "icons").mkdir(parents=True, exist_ok=True)
+
+    legacy = _legacy_game_folder(game_name)
+    if legacy != canonical:
+        _merge_dir(root / legacy, dest)
+
+    maps_prefix = f"{canonical}/maps/"
+    for game_map in GameMaps.objects.filter(GameName__name=game_name):
+        path = (game_map.image_path or "").strip().replace("\\", "/")
+        if not path:
+            continue
+        if path.startswith(f"{canonical}/"):
+            new_path = path
+        elif path.startswith(f"{legacy}/"):
+            new_path = canonical + path[len(legacy):]
+        elif path.startswith("maps/"):
+            new_path = f"{canonical}/{path}"
+        else:
+            new_path = f"{maps_prefix}{os.path.basename(path)}"
+
+        old_file = root / path
+        new_file = root / new_path
+        new_file.parent.mkdir(parents=True, exist_ok=True)
+        if old_file.exists() and old_file.resolve() != new_file.resolve():
+            if not new_file.exists():
+                shutil.move(str(old_file), str(new_file))
+        if new_path != path:
+            game_map.image_path = new_path
+            game_map.save(update_fields=["image_path"])
+
+
+def coalesce_all_game_media():
+    for game in Games.objects.all():
+        coalesce_game_media(game.name)
+
+
 def ensure_game_media(game_name):
-    maps_dir = Path(settings.MEDIA_ROOT) / game_folder(game_name) / "maps"
-    maps_dir.mkdir(parents=True, exist_ok=True)
+    coalesce_game_media(game_name)
     return game_maps_prefix(game_name)
 
 
 def delete_game_media(game_name):
-    folder = Path(settings.MEDIA_ROOT) / game_folder(game_name)
-    if folder.is_dir():
-        shutil.rmtree(folder)
+    root = Path(settings.MEDIA_ROOT)
+    for folder_name in {game_folder(game_name), _legacy_game_folder(game_name)}:
+        folder = root / folder_name
+        if folder.is_dir():
+            shutil.rmtree(folder)
 
 
 def rename_game_media(old_name, new_name):
+    coalesce_game_media(old_name)
     old_folder = Path(settings.MEDIA_ROOT) / game_folder(old_name)
     new_folder = Path(settings.MEDIA_ROOT) / game_folder(new_name)
     if old_folder.is_dir() and old_folder.resolve() != new_folder.resolve():
         if new_folder.exists():
-            shutil.rmtree(new_folder)
-        new_folder.parent.mkdir(parents=True, exist_ok=True)
-        old_folder.rename(new_folder)
+            _merge_dir(old_folder, new_folder)
+        else:
+            new_folder.parent.mkdir(parents=True, exist_ok=True)
+            old_folder.rename(new_folder)
 
     old_prefix = f"{game_folder(old_name)}/"
     new_prefix = f"{game_folder(new_name)}/"
@@ -83,7 +149,7 @@ def rename_game_media(old_name, new_name):
     ensure_game_media(new_name)
 
     for game_map in GameMaps.objects.filter(GameName__name=new_name):
-        path = (game_map.image_path or "").strip()
+        path = (game_map.image_path or "").strip().replace("\\", "/")
         if not path:
             continue
         if path.startswith(old_prefix):

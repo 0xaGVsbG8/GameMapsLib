@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import "./add-game.css";
+import "../css/add-game.css";
 
 type EditNameWidgetProps = {
   title: string;

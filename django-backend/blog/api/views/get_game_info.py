@@ -6,6 +6,7 @@ from rest_framework.views import APIView
 
 from ...authentication import CookieJWTAuthentication
 from ...models import Games, ItemsCategories, ItemsSubCategories
+from ..helpers import coalesce_game_media
 from ..serializers import GameInfoSerializer
 
 
@@ -82,11 +83,12 @@ class getGameInfo(APIView):
         serializer.is_valid(raise_exception=True)
 
         GAMENAME = serializer.validated_data["GameName"]
-        game = game_info_queryset().filter(name=GAMENAME).first()
-        if game is None:
+        if not Games.objects.filter(name=GAMENAME).exists():
             return Response(
                 {"message": "Game not found"},
                 status=status.HTTP_404_NOT_FOUND,
             )
 
+        coalesce_game_media(GAMENAME)
+        game = game_info_queryset().filter(name=GAMENAME).first()
         return Response(build_game_info(request, game))
